@@ -5,7 +5,8 @@ plugins {
     id("dagger.hilt.android.plugin")
 }
 
-android {
+android {"" +
+        ""
     namespace = "com.faharix.zappo"
     compileSdk = 34
 
