@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -26,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
 
@@ -69,7 +71,12 @@ fun EditNoteScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onSaveNote(title, content) },
+                onClick = {
+                    if (title.isNotBlank() || content.isNotBlank()){
+                        onSaveNote(title, content)
+                    }
+
+                },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
@@ -87,11 +94,16 @@ fun EditNoteScreen(
                 .padding(16.dp)
         ) {
             OutlinedTextField(
+                singleLine = true,
                 value = title,
                 onValueChange = { title = it },
                 label = { Text("Titre") },
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.titleLarge
+                textStyle = MaterialTheme.typography.titleLarge,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    capitalization = KeyboardCapitalization.Sentences
+                )
+
             )
 
             Spacer(modifier = Modifier.height(16.dp))

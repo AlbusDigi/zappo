@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -40,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
@@ -210,4 +212,7 @@ fun NoteCard(
 }
 
 @Composable
-private fun MaterialTheme.colorScheme.isLight() = this.background.luminance() > 0.5
+fun ColorScheme.isLight(): Boolean {
+    return this.background.luminance() > 0.5
+}
+//private fun MaterialTheme.colorScheme.isLight() = this.background.luminance() > 0.5

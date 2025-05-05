@@ -4,7 +4,6 @@ import android.content.Context
 import com.faharix.zappo.data.AppDatabase
 import com.faharix.zappo.data.NoteDao
 import com.faharix.zappo.repository.NoteRepository
-import com.google.android.datatransport.runtime.dagger.Module
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
