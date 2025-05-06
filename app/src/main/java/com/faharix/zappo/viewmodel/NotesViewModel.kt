@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.text.Typography.dagger
 
 @HiltViewModel
 class NotesViewModel @Inject constructor(
@@ -23,6 +22,7 @@ class NotesViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery
 
+    // Dans NotesViewModel.kt
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes = _searchQuery.flatMapLatest { query ->
         if (query.isBlank()) {
@@ -32,19 +32,38 @@ class NotesViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    // Obtenir tous les dossiers uniques
+    val folders = repository.getAllFolders()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun addNote(title: String, content: String) {
+    fun addNote(title: String, content: String, folder: String? = null, isTask: Boolean = false, isCompleted: Boolean = false) {
         viewModelScope.launch {
-            repository.insertNote(title, content)
+            repository.insertNote(title, content, folder, isTask, isCompleted)
         }
     }
 
-    fun updateNote(id: Int, title: String, content: String) {
+    fun updateNote(id: Int, title: String, content: String, folder: String? = null, isTask: Boolean = false, isCompleted: Boolean = false) {
         viewModelScope.launch {
-            repository.updateNote(id, title, content)
+            repository.updateNote(id, title, content, folder, isTask, isCompleted)
+        }
+    }
+
+    fun toggleTaskCompletion(note: Note) {
+        if (note.isTask) {
+            viewModelScope.launch {
+                repository.updateNote(
+                    note.id,
+                    note.title,
+                    note.content,
+                    note.folder,
+                    true,
+                    !note.isCompleted
+                )
+            }
         }
     }
 

@@ -1,43 +1,14 @@
 package com.faharix.zappo.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SearchBar
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,6 +16,10 @@ import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+enum class ContentType {
+    NOTES, TASKS
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,6 +32,7 @@ fun HomeScreen(
     onDeleteNote: (Note) -> Unit,
     onToggleTheme: () -> Unit
 ) {
+    var selectedContentType by remember { mutableStateOf(ContentType.NOTES) }
     var isSearchActive by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -68,6 +44,12 @@ fun HomeScreen(
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 actions = {
+                    IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search"
+                        )
+                    }
                     IconButton(onClick = onToggleTheme) {
                         Icon(
                             imageVector = if (MaterialTheme.colorScheme.isLight())
@@ -78,6 +60,22 @@ fun HomeScreen(
                 }
             )
         },
+        bottomBar = {
+            NavigationBar {
+                NavigationBarItem(
+                    selected = selectedContentType == ContentType.NOTES,
+                    onClick = { selectedContentType = ContentType.NOTES },
+                    icon = { Icon(Icons.Default.Note, contentDescription = "Notes") },
+                    label = { Text("Notes") }
+                )
+                NavigationBarItem(
+                    selected = selectedContentType == ContentType.TASKS,
+                    onClick = { selectedContentType = ContentType.TASKS },
+                    icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Tasks") },
+                    label = { Text("Tâches") }
+                )
+            }
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddNoteClick,
@@ -85,7 +83,7 @@ fun HomeScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add Note",
+                    contentDescription = if (selectedContentType == ContentType.NOTES) "Add Note" else "Add Task",
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -96,57 +94,128 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            SearchBar(
-                query = searchQuery,
-                onQueryChange = onSearchQueryChange,
-                onSearch = { onSearchQueryChange(it) },
-                active = isSearchActive,
-                onActiveChange = { isSearchActive = it },
-                placeholder = { Text("Rechercher des notes") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { onSearchQueryChange("") }) {
-                            Icon(Icons.Default.Close, contentDescription = "Clear search")
+            // Barre de recherche simplifiée
+            // Barre de recherche simplifiée
+            if (isSearchActive) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    placeholder = { Text("Rechercher des notes") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = "Search")
+                    },
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            onSearchQueryChange("")
+                            isSearchActive = false
+                        }) {
+                            Icon(Icons.Default.Close, contentDescription = "Close search")
                         }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                // Search suggestions could go here
+                    },
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    )
+                )
             }
 
-            if (notes.isEmpty()) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (searchQuery.isEmpty())
-                            "Aucune note. Appuyez sur + pour commencer."
-                        else
-                            "Aucun résultat pour \"$searchQuery\"",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(notes) { note ->
-                        NoteCard(
-                            note = note,
-                            onClick = { onNoteClick(note.id) },
-                            onDelete = { onDeleteNote(note) }
-                        )
+            // Affichage des dossiers et notes
+            FolderAndNotesList(
+                notes = notes.filter {
+                    (selectedContentType == ContentType.NOTES && !it.isTask) ||
+                            (selectedContentType == ContentType.TASKS && it.isTask)
+                },
+                searchQuery = searchQuery,
+                onNoteClick = onNoteClick,
+                onDeleteNote = onDeleteNote
+            )
+        }
+    }
+}
+
+@Composable
+fun FolderAndNotesList(
+    notes: List<Note>,
+    searchQuery: String,
+    onNoteClick: (Int) -> Unit,
+    onDeleteNote: (Note) -> Unit
+) {
+    // Filtrer les notes en fonction de la recherche si nécessaire
+    val filteredNotes = if (searchQuery.isBlank()) {
+        notes
+    } else {
+        notes.filter {
+            it.title.contains(searchQuery, ignoreCase = true) ||
+                    it.content.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
+    // Regrouper les notes par dossier
+    val notesByFolder = filteredNotes.groupBy { it.folder ?: "" }
+
+    if (filteredNotes.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (searchQuery.isEmpty())
+                    "Aucun élément. Appuyez sur + pour commencer."
+                else
+                    "Aucun résultat pour \"$searchQuery\"",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    } else {
+        LazyColumn(
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            notesByFolder.forEach { (folder, folderNotes) ->
+                if (folder.isNotEmpty()) {
+                    // Afficher l'en-tête du dossier
+                    item {
+                        FolderHeader(folderName = folder)
                     }
+                }
+
+                // Afficher les notes du dossier
+                items(folderNotes) { note ->
+                    NoteCard(
+                        note = note,
+                        onClick = { onNoteClick(note.id) },
+                        onDelete = { onDeleteNote(note) }
+                    )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun FolderHeader(folderName: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Default.Folder,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = folderName,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
@@ -172,13 +241,27 @@ fun NoteCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = note.title,
-                    style = MaterialTheme.typography.titleLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
-                )
+                ) {
+                    if (note.isTask) {
+                        Icon(
+                            imageVector = if (note.isCompleted) Icons.Default.CheckCircle else Icons.Default.Circle,
+                            contentDescription = if (note.isCompleted) "Task completed" else "Task not completed",
+                            tint = if (note.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    Text(
+                        text = note.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
 
                 IconButton(onClick = onDelete) {
                     Icon(
@@ -209,5 +292,9 @@ fun NoteCard(
     }
 }
 
+
 @Composable
-private fun MaterialTheme.colorScheme.isLight() = this.background.luminance() > 0.5
+fun ColorScheme.isLight(): Boolean {
+    return this.background.luminance() > 0.5
+}
+//private fun MaterialTheme.colorScheme.isLight() = this.background.luminance() > 0.5

@@ -1,30 +1,12 @@
 package com.faharix.zappo.ui.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
@@ -33,18 +15,31 @@ import com.faharix.zappo.data.Note
 @Composable
 fun EditNoteScreen(
     note: Note?,
-    onSaveNote: (String, String) -> Unit,
+    contentType: ContentType = ContentType.NOTES,
+    onSaveNote: (String, String, String?, Boolean, Boolean) -> Unit,
     onCancel: () -> Unit
 ) {
     var title by remember { mutableStateOf(note?.title ?: "") }
     var content by remember { mutableStateOf(note?.content ?: "") }
+    var folder by remember { mutableStateOf(note?.folder ?: "") }
+    var isTask by remember { mutableStateOf(note?.isTask ?: (contentType == ContentType.TASKS)) }
+    var isCompleted by remember { mutableStateOf(note?.isCompleted ?: false) }
+    var showFolderDialog by remember { mutableStateOf(false) }
 
     val isNewNote = note == null
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isNewNote) "Nouvelle note" else "Modifier la note") },
+                title = {
+                    Text(
+                        if (isNewNote) {
+                            if (isTask) "Nouvelle tâche" else "Nouvelle note"
+                        } else {
+                            if (isTask) "Modifier la tâche" else "Modifier la note"
+                        }
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -58,6 +53,22 @@ fun EditNoteScreen(
                     }
                 },
                 actions = {
+                    // Bouton pour changer entre note et tâche
+                    IconButton(onClick = { isTask = !isTask }) {
+                        Icon(
+                            imageVector = if (isTask) Icons.Default.Note else Icons.Default.CheckCircle,
+                            contentDescription = if (isTask) "Convertir en note" else "Convertir en tâche"
+                        )
+                    }
+
+                    // Bouton pour sélectionner un dossier
+                    IconButton(onClick = { showFolderDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Folder,
+                            contentDescription = "Sélectionner un dossier"
+                        )
+                    }
+
                     IconButton(onClick = onCancel) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -69,7 +80,7 @@ fun EditNoteScreen(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { onSaveNote(title, content) },
+                onClick = { onSaveNote(title, content, if (folder.isEmpty()) null else folder, isTask, isCompleted) },
                 containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
@@ -86,6 +97,47 @@ fun EditNoteScreen(
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
+            // Afficher le dossier sélectionné s'il y en a un
+            if (folder.isNotEmpty()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Folder,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Dossier: $folder",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Option de complétion pour les tâches
+            if (isTask) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                ) {
+                    Checkbox(
+                        checked = isCompleted,
+                        onCheckedChange = { isCompleted = it }
+                    )
+                    Text(
+                        text = if (isCompleted) "Tâche complétée" else "Tâche à faire",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+
             OutlinedTextField(
                 value = title,
                 onValueChange = { title = it },
@@ -106,5 +158,116 @@ fun EditNoteScreen(
                 textStyle = MaterialTheme.typography.bodyLarge
             )
         }
+
+        // Dialogue pour sélectionner ou créer un dossier
+        if (showFolderDialog) {
+            FolderSelectionDialog(
+                currentFolder = folder,
+                onFolderSelected = { selectedFolder ->
+                    folder = selectedFolder
+                    showFolderDialog = false
+                },
+                onDismiss = { showFolderDialog = false }
+            )
+        }
     }
+}
+
+@Composable
+fun FolderSelectionDialog(
+    currentFolder: String,
+    onFolderSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var newFolderName by remember { mutableStateOf("") }
+    var isCreatingNewFolder by remember { mutableStateOf(false) }
+
+    // Liste de dossiers existants (à remplacer par une vraie liste de votre base de données)
+    val existingFolders = listOf("Personnel", "Travail", "Projets", "Idées")
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Sélectionner un dossier") },
+        text = {
+            Column {
+                if (isCreatingNewFolder) {
+                    OutlinedTextField(
+                        value = newFolderName,
+                        onValueChange = { newFolderName = it },
+                        label = { Text("Nom du nouveau dossier") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 16.dp)
+                    )
+                } else {
+                    // Option pour aucun dossier
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onFolderSelected("") }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentFolder.isEmpty(),
+                            onClick = { onFolderSelected("") }
+                        )
+                        Text("Aucun dossier")
+                    }
+
+                    // Liste des dossiers existants
+                    existingFolders.forEach { folderName ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onFolderSelected(folderName) }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = currentFolder == folderName,
+                                onClick = { onFolderSelected(folderName) }
+                            )
+                            Text(folderName)
+                        }
+                    }
+
+                    // Option pour créer un nouveau dossier
+                    TextButton(
+                        onClick = { isCreatingNewFolder = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CreateNewFolder, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Créer un nouveau dossier")
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            if (isCreatingNewFolder) {
+                TextButton(
+                    onClick = {
+                        if (newFolderName.isNotEmpty()) {
+                            onFolderSelected(newFolderName)
+                        }
+                    },
+                    enabled = newFolderName.isNotEmpty()
+                ) {
+                    Text("Créer")
+                }
+            } else {
+                TextButton(onClick = onDismiss) {
+                    Text("Fermer")
+                }
+            }
+        },
+        dismissButton = {
+            if (isCreatingNewFolder) {
+                TextButton(onClick = { isCreatingNewFolder = false }) {
+                    Text("Annuler")
+                }
+            }
+        }
+    )
 }
