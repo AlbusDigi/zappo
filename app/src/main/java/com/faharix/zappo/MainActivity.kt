@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
                                 notes.find { it.id == noteId }
                             } else null
 
-                            // Dans MainActivity.kt, mettez à jour l'appel à EditNoteScreen
+                            // Modification de la note ou tâche
                             EditNoteScreen(
                                 note = note,
                                 contentType = if (note?.isTask == true) ContentType.TASKS else ContentType.NOTES,
