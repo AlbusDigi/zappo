@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Date
 import javax.inject.Inject
 
 @HiltViewModel
@@ -43,6 +44,32 @@ class NotesViewModel @Inject constructor(
     fun addNote(title: String, content: String, folder: String? = null, isTask: Boolean = false, isCompleted: Boolean = false) {
         viewModelScope.launch {
             repository.insertNote(title, content, folder, isTask, isCompleted)
+        }
+    }// Dans NotesViewModel.kt, mettez à jour les méthodes pour prendre en charge la date d'échéance
+    fun addNote(
+        title: String,
+        content: String,
+        folder: String? = null,
+        isTask: Boolean = false,
+        isCompleted: Boolean = false,
+        dueDate: Date? = null
+    ) {
+        viewModelScope.launch {
+            repository.insertNote(title, content, folder, isTask, isCompleted, dueDate)
+        }
+    }
+
+    fun updateNote(
+        id: Int,
+        title: String,
+        content: String,
+        folder: String? = null,
+        isTask: Boolean = false,
+        isCompleted: Boolean = false,
+        dueDate: Date? = null
+    ) {
+        viewModelScope.launch {
+            repository.updateNote(id, title, content, folder, isTask, isCompleted, dueDate)
         }
     }
 

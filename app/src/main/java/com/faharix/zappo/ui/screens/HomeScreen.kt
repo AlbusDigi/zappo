@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
+import com.faharix.zappo.ui.components.DeleteConfirmationDialog
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -226,6 +227,7 @@ fun NoteCard(
     onDelete: () -> Unit
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
 
     Card(
         modifier = Modifier
@@ -263,7 +265,9 @@ fun NoteCard(
                     )
                 }
 
-                IconButton(onClick = onDelete) {
+                IconButton(
+                    onClick = { showDeleteConfirmation = true }
+                ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = "Delete note",
@@ -288,7 +292,42 @@ fun NoteCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            // Afficher la date d'échéance pour les tâches
+            if (note.isTask && note.dueDate != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarToday,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Échéance: ${dateFormat.format(note.dueDate!!)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
+    }
+
+    // Dialogue de confirmation de suppression
+    if (showDeleteConfirmation) {
+        DeleteConfirmationDialog(
+            note = note,
+            onConfirm = {
+                onDelete()
+                showDeleteConfirmation = false
+            },
+            onDismiss = {
+                showDeleteConfirmation = false
+            }
+        )
     }
 }
 
