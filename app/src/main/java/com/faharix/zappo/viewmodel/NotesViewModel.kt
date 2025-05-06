@@ -45,7 +45,7 @@ class NotesViewModel @Inject constructor(
         viewModelScope.launch {
             repository.insertNote(title, content, folder, isTask, isCompleted)
         }
-    }// Dans NotesViewModel.kt, mettez à jour les méthodes pour prendre en charge la date d'échéance
+    }
     fun addNote(
         title: String,
         content: String,
