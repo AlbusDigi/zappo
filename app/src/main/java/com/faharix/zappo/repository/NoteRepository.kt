@@ -38,13 +38,36 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         return noteDao.insertNote(note)
     }
 
+    // Dans NoteRepository.kt, mettez à jour les méthodes pour prendre en charge la date d'échéance
+    suspend fun insertNote(
+        title: String,
+        content: String,
+        folder: String? = null,
+        isTask: Boolean = false,
+        isCompleted: Boolean = false,
+        dueDate: Date? = null
+    ): Long {
+        val note = Note(
+            title = title,
+            content = content,
+            folder = folder,
+            isTask = isTask,
+            isCompleted = isCompleted,
+            dueDate = dueDate,
+            createdAt = Date(),
+            modifiedAt = Date()
+        )
+        return noteDao.insertNote(note)
+    }
+
     suspend fun updateNote(
         id: Int,
         title: String,
         content: String,
         folder: String? = null,
         isTask: Boolean = false,
-        isCompleted: Boolean = false
+        isCompleted: Boolean = false,
+        dueDate: Date? = null
     ) {
         val note = noteDao.getNoteById(id)
         note?.let {
@@ -54,6 +77,7 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
                 folder = folder,
                 isTask = isTask,
                 isCompleted = isCompleted,
+                dueDate = dueDate,
                 modifiedAt = Date()
             )
             noteDao.updateNote(updatedNote)

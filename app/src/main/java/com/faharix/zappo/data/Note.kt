@@ -12,7 +12,8 @@ data class Note(
     val content: String,
     val folder: String? = null,  // Nouveau champ pour le dossier
     val isTask: Boolean = false, // Indique si c'est une note ou une tâche
-    val isCompleted: Boolean = false, // Pour les tâches uniquement
+    val isCompleted: Boolean = false,
+    val dueDate: Date? = null,// Pour les tâches uniquement
     val createdAt: Date = Date(),
     val modifiedAt: Date = Date()
 )

@@ -59,14 +59,15 @@ class MainActivity : ComponentActivity() {
                                 notes.find { it.id == noteId }
                             } else null
 
+                            // Dans MainActivity.kt, mettez à jour l'appel à EditNoteScreen
                             EditNoteScreen(
                                 note = note,
                                 contentType = if (note?.isTask == true) ContentType.TASKS else ContentType.NOTES,
-                                onSaveNote = { title, content, folder, isTask, isCompleted ->
+                                onSaveNote = { title, content, folder, isTask, isCompleted, dueDate ->
                                     if (noteId == -1) {
-                                        notesViewModel.addNote(title, content, folder, isTask, isCompleted)
+                                        notesViewModel.addNote(title, content, folder, isTask, isCompleted, dueDate)
                                     } else {
-                                        notesViewModel.updateNote(noteId, title, content, folder, isTask, isCompleted)
+                                        notesViewModel.updateNote(noteId, title, content, folder, isTask, isCompleted, dueDate)
                                     }
                                     navController.popBackStack()
                                 },
