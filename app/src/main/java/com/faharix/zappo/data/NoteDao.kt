@@ -16,6 +16,9 @@ interface NoteDao {
     @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%' ORDER BY modifiedAt DESC")
     fun searchNotes(query: String): Flow<List<Note>>
 
+    @Query("SELECT DISTINCT folder FROM notes WHERE folder IS NOT NULL ORDER BY folder")
+    fun getAllFolders(): Flow<List<String>>
+
     @Query("SELECT * FROM notes WHERE id = :id")
     suspend fun getNoteById(id: Int): Note?
 

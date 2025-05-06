@@ -14,24 +14,46 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
 
     fun searchNotes(query: String): Flow<List<Note>> = noteDao.searchNotes(query)
 
+    // Utiliser la méthode du DAO pour obtenir tous les dossiers uniques
+    fun getAllFolders(): Flow<List<String>> = noteDao.getAllFolders()
+
     suspend fun getNoteById(id: Int): Note? = noteDao.getNoteById(id)
 
-    suspend fun insertNote(title: String, content: String): Long {
+    suspend fun insertNote(
+        title: String,
+        content: String,
+        folder: String? = null,
+        isTask: Boolean = false,
+        isCompleted: Boolean = false
+    ): Long {
         val note = Note(
             title = title,
             content = content,
+            folder = folder,
+            isTask = isTask,
+            isCompleted = isCompleted,
             createdAt = Date(),
             modifiedAt = Date()
         )
         return noteDao.insertNote(note)
     }
 
-    suspend fun updateNote(id: Int, title: String, content: String) {
+    suspend fun updateNote(
+        id: Int,
+        title: String,
+        content: String,
+        folder: String? = null,
+        isTask: Boolean = false,
+        isCompleted: Boolean = false
+    ) {
         val note = noteDao.getNoteById(id)
         note?.let {
             val updatedNote = it.copy(
                 title = title,
                 content = content,
+                folder = folder,
+                isTask = isTask,
+                isCompleted = isCompleted,
                 modifiedAt = Date()
             )
             noteDao.updateNote(updatedNote)

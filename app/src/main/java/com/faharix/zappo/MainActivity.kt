@@ -11,10 +11,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.faharix.zappo.ui.screens.ContentType
 import com.faharix.zappo.ui.screens.EditNoteScreen
 import com.faharix.zappo.ui.screens.HomeScreen
 import com.faharix.zappo.ui.theme.ZappoTheme
@@ -32,7 +33,7 @@ class MainActivity : ComponentActivity() {
             ZappoTheme(darkTheme = darkTheme) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
-                    val notesViewModel: NotesViewModel = viewModel()
+                    val notesViewModel: NotesViewModel = hiltViewModel()
                     val notes by notesViewModel.notes.collectAsState(initial = emptyList())
                     val searchQuery by notesViewModel.searchQuery.collectAsState()
 
@@ -60,11 +61,12 @@ class MainActivity : ComponentActivity() {
 
                             EditNoteScreen(
                                 note = note,
-                                onSaveNote = { title, content ->
+                                contentType = if (note?.isTask == true) ContentType.TASKS else ContentType.NOTES,
+                                onSaveNote = { title, content, folder, isTask, isCompleted ->
                                     if (noteId == -1) {
-                                        notesViewModel.addNote(title, content)
+                                        notesViewModel.addNote(title, content, folder, isTask, isCompleted)
                                     } else {
-                                        notesViewModel.updateNote(noteId, title, content)
+                                        notesViewModel.updateNote(noteId, title, content, folder, isTask, isCompleted)
                                     }
                                     navController.popBackStack()
                                 },
