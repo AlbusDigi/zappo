@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.faharix.zappo.ui.screens.ContentType
 import com.faharix.zappo.ui.screens.EditNoteScreen
 import com.faharix.zappo.ui.screens.HomeScreen
+import com.faharix.zappo.ui.screens.TrashScreen
 import com.faharix.zappo.ui.theme.ZappoTheme
 import com.faharix.zappo.viewmodel.NotesViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,13 +35,16 @@ class MainActivity : ComponentActivity() {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
                     val notesViewModel: NotesViewModel = hiltViewModel()
-                    val notes by notesViewModel.notes.collectAsState(initial = emptyList())
+                    val trashedNotes by notesViewModel.trashedNotes.collectAsState(initial = emptyList())
+                    // Changement de notes à activeNotes pour correspondre à l'implémentation de la corbeille
+                    val note by notesViewModel.notes.collectAsState()
                     val searchQuery by notesViewModel.searchQuery.collectAsState()
 
                     NavHost(navController = navController, startDestination = "home") {
                         composable("home") {
                             HomeScreen(
-                                notes = notes,
+                                // Utiliser activeNotes au lieu de notes
+                                notes = note,
                                 searchQuery = searchQuery,
                                 onSearchQueryChange = notesViewModel::updateSearchQuery,
                                 onNoteClick = { noteId ->
@@ -49,17 +53,22 @@ class MainActivity : ComponentActivity() {
                                 onAddNoteClick = {
                                     navController.navigate("edit/-1")
                                 },
-                                onDeleteNote = notesViewModel::deleteNote,
+                                // Changer onDeleteNote à onMoveToTrash pour utiliser la corbeille
+                                onMoveToTrash = notesViewModel::moveToTrash,
+                                // Ajouter le paramètre manquant pour naviguer vers la corbeille
+                                onNavigateToTrash = {
+                                    navController.navigate("trash")
+                                },
                                 onToggleTheme = { darkTheme = !darkTheme }
                             )
                         }
                         composable("edit/{noteId}") { backStackEntry ->
                             val noteId = backStackEntry.arguments?.getString("noteId")?.toIntOrNull() ?: -1
                             val note = if (noteId != -1) {
-                                notes.find { it.id == noteId }
+                                // Utiliser activeNotes au lieu de notes
+                                note.find { it.id == noteId }
                             } else null
 
-                            // Modification de la note ou tâche
                             EditNoteScreen(
                                 note = note,
                                 contentType = if (note?.isTask == true) ContentType.TASKS else ContentType.NOTES,
@@ -72,6 +81,17 @@ class MainActivity : ComponentActivity() {
                                     navController.popBackStack()
                                 },
                                 onCancel = {
+                                    navController.popBackStack()
+                                }
+                            )
+                        }
+                        composable("trash"){
+                            TrashScreen(
+                                trashedNotes = trashedNotes,
+                                onRestoreNote = notesViewModel::restoreFromTrash,
+                                onDeletePermanently = notesViewModel::deleteNotePermanently,
+                                onEmptyTrash = notesViewModel::emptyTrash,
+                                onNavigateBack = {
                                     navController.popBackStack()
                                 }
                             )

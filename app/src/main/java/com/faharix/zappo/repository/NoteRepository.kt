@@ -12,6 +12,12 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
 
     fun getAllNotes(): Flow<List<Note>> = noteDao.getAllNotes()
 
+    fun getAllActiveNotes(): Flow<List<Note>> = noteDao.getAllActiveNotes()
+
+    fun getAllTrashedNotes(): Flow<List<Note>> = noteDao.getAllTrashedNotes()
+
+    fun searchActiveNotes(query: String): Flow<List<Note>> = noteDao.searchActiveNotes(query)
+
     fun searchNotes(query: String): Flow<List<Note>> = noteDao.searchNotes(query)
 
     // Utiliser la méthode du DAO pour obtenir tous les dossiers uniques
@@ -83,8 +89,22 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
             noteDao.updateNote(updatedNote)
         }
     }
+    // Mettre une note dans la corbeille
+    suspend fun moveToTrash(note: Note) {
+        noteDao.moveToTrash(note.id, Date().time)
+    }
+    // Restaurer une note de la corbeille
+    suspend fun restoreFromTrash(note: Note) {
+        noteDao.restoreFromTrash(note.id)
+    }
 
-    suspend fun deleteNote(note: Note) {
+    // Vider la corbeille
+    suspend fun emptyTrash() {
+        noteDao.emptyTrash()
+    }
+
+    // Supprimer définitivement une note
+    suspend fun deleteNotePermanently(note: Note) {
         noteDao.deleteNote(note)
     }
 }

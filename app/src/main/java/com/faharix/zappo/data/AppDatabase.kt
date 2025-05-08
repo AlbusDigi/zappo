@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class], version = 3) // Version augmentée à 2
+@Database(entities = [Note::class], version = 4)
 @TypeConverters(Converters::class) // Pour les conversions de Date
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
@@ -33,6 +33,13 @@ abstract class AppDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE notes ADD COLUMN dueDate INTEGER")
             }
         }
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Ajouter les colonnes pour la corbeille
+                database.execSQL("ALTER TABLE notes ADD COLUMN isInTrash INTEGER NOT NULL DEFAULT 0")
+                database.execSQL("ALTER TABLE notes ADD COLUMN deletedAt INTEGER")
+            }
+        }
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -41,7 +48,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "notes_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3) // Utiliser la migration définie
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4) // Utiliser la migration définie
                     .build()
                 INSTANCE = instance
                 instance

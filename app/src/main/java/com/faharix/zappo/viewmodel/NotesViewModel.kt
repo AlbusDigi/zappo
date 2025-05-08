@@ -33,6 +33,9 @@ class NotesViewModel @Inject constructor(
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    // Notes dans la corbeille
+    val trashedNotes = repository.getAllTrashedNotes()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     // Obtenir tous les dossiers uniques
     val folders = repository.getAllFolders()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -93,10 +96,31 @@ class NotesViewModel @Inject constructor(
             }
         }
     }
-
-    fun deleteNote(note: Note) {
+    // Mettre une note dans la corbeille
+    fun moveToTrash(note: Note) {
         viewModelScope.launch {
-            repository.deleteNote(note)
+            repository.moveToTrash(note)
         }
     }
+    // Restaurer une note de la corbeille
+    fun restoreFromTrash(note: Note) {
+        viewModelScope.launch {
+            repository.restoreFromTrash(note)
+        }
+    }
+
+    // Vider la corbeille
+    fun emptyTrash() {
+        viewModelScope.launch {
+            repository.emptyTrash()
+        }
+    }
+
+    // Supprimer définitivement une note
+    fun deleteNotePermanently(note: Note) {
+        viewModelScope.launch {
+            repository.deleteNotePermanently(note)
+        }
+    }
+
 }

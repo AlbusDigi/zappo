@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -23,6 +24,7 @@ import com.faharix.zappo.data.Note
 @Composable
 fun DeleteConfirmationDialog(
     note: Note,
+    isPermanentDelete: Boolean = false,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
@@ -68,18 +70,24 @@ fun DeleteConfirmationDialog(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Icône animée
-                    DeleteIconAnimation(isTask = note.isTask)
+                    DeleteIconAnimation(isTask = note.isTask, isPermanentDelete = isPermanentDelete)
 
                     // Titre
                     Text(
-                        text = "Supprimer ${if (note.isTask) "cette tâche" else "cette note"} ?",
+                        text = if (isPermanentDelete)
+                            "Supprimer définitivement ?"
+                        else
+                            "Mettre dans la corbeille ?",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
 
                     // Message
                     Text(
-                        text = "Êtes-vous sûr de vouloir supprimer ${if (note.isTask) "la tâche" else "la note"} \"${note.title}\" ? Cette action est irréversible.",
+                        text = if (isPermanentDelete)
+                            "Êtes-vous sûr de vouloir supprimer définitivement ${if (note.isTask) "la tâche" else "la note"} \"${note.title}\" ? Cette action est irréversible."
+                        else
+                            "Êtes-vous sûr de vouloir mettre ${if (note.isTask) "la tâche" else "la note"} \"${note.title}\" dans la corbeille ? Vous pourrez la restaurer plus tard.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -118,12 +126,15 @@ fun DeleteConfirmationDialog(
                             )
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Delete,
+                                imageVector = if (isPermanentDelete)
+                                    Icons.Default.DeleteForever
+                                else
+                                    Icons.Default.Delete,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Supprimer")
+                            Text(if (isPermanentDelete) "Supprimer" else "Mettre en corbeille")
                         }
                     }
                 }
@@ -133,7 +144,7 @@ fun DeleteConfirmationDialog(
 }
 
 @Composable
-fun DeleteIconAnimation(isTask: Boolean) {
+fun DeleteIconAnimation(isTask: Boolean, isPermanentDelete: Boolean = false) {
     val infiniteTransition = rememberInfiniteTransition(label = "deleteIconAnimation")
 
     val iconSize by infiniteTransition.animateFloat(
@@ -163,24 +174,11 @@ fun DeleteIconAnimation(isTask: Boolean) {
             .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
-        if (isTask) {
-            // Animation spécifique pour les tâches
-            Row {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = null,
-                    tint = iconColor,
-                    modifier = Modifier.size(iconSize.dp)
-                )
-            }
-        } else {
-            // Animation pour les notes
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = null,
-                tint = iconColor,
-                modifier = Modifier.size(iconSize.dp)
-            )
-        }
+        Icon(
+            imageVector = if (isPermanentDelete) Icons.Default.DeleteForever else Icons.Default.Delete,
+            contentDescription = null,
+            tint = iconColor,
+            modifier = Modifier.size(iconSize.dp)
+        )
     }
 }

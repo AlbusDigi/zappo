@@ -6,11 +6,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
@@ -30,7 +31,8 @@ fun HomeScreen(
     onSearchQueryChange: (String) -> Unit,
     onNoteClick: (Int) -> Unit,
     onAddNoteClick: () -> Unit,
-    onDeleteNote: (Note) -> Unit,
+    onMoveToTrash: (Note) -> Unit,
+    onNavigateToTrash: () -> Unit,
     onToggleTheme: () -> Unit
 ) {
     var selectedContentType by remember { mutableStateOf(ContentType.NOTES) }
@@ -48,14 +50,20 @@ fun HomeScreen(
                     IconButton(onClick = { isSearchActive = !isSearchActive }) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Search"
+                            contentDescription = "Rechercher"
+                        )
+                    }
+                    IconButton(onClick = onNavigateToTrash) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Corbeille"
                         )
                     }
                     IconButton(onClick = onToggleTheme) {
                         Icon(
-                            imageVector = if (MaterialTheme.colorScheme.isLight())
+                            imageVector = if (MaterialTheme.colorScheme.background.luminance() > 0.5)
                                 Icons.Default.DarkMode else Icons.Default.LightMode,
-                            contentDescription = "Toggle theme"
+                            contentDescription = "Changer de thème"
                         )
                     }
                 }
@@ -72,7 +80,7 @@ fun HomeScreen(
                 NavigationBarItem(
                     selected = selectedContentType == ContentType.TASKS,
                     onClick = { selectedContentType = ContentType.TASKS },
-                    icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Tasks") },
+                    icon = { Icon(Icons.Default.CheckCircle, contentDescription = "Tâches") },
                     label = { Text("Tâches") }
                 )
             }
@@ -84,7 +92,7 @@ fun HomeScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = if (selectedContentType == ContentType.NOTES) "Add Note" else "Add Task",
+                    contentDescription = if (selectedContentType == ContentType.NOTES) "Ajouter une note" else "Ajouter une tâche",
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -96,7 +104,6 @@ fun HomeScreen(
                 .padding(paddingValues)
         ) {
             // Barre de recherche simplifiée
-            // Barre de recherche simplifiée
             if (isSearchActive) {
                 OutlinedTextField(
                     value = searchQuery,
@@ -106,14 +113,14 @@ fun HomeScreen(
                         .padding(16.dp),
                     placeholder = { Text("Rechercher des notes") },
                     leadingIcon = {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
+                        Icon(Icons.Default.Search, contentDescription = "Rechercher")
                     },
                     trailingIcon = {
                         IconButton(onClick = {
                             onSearchQueryChange("")
                             isSearchActive = false
                         }) {
-                            Icon(Icons.Default.Close, contentDescription = "Close search")
+                            Icon(Icons.Default.Close, contentDescription = "Fermer la recherche")
                         }
                     },
                     singleLine = true,
@@ -132,7 +139,7 @@ fun HomeScreen(
                 },
                 searchQuery = searchQuery,
                 onNoteClick = onNoteClick,
-                onDeleteNote = onDeleteNote
+                onDeleteNote = onMoveToTrash
             )
         }
     }
@@ -190,7 +197,7 @@ fun FolderAndNotesList(
                     NoteCard(
                         note = note,
                         onClick = { onNoteClick(note.id) },
-                        onDelete = { onDeleteNote(note) }
+                        onMoveToTrash = { onDeleteNote(note) }
                     )
                 }
             }
@@ -224,7 +231,7 @@ fun FolderHeader(folderName: String) {
 fun NoteCard(
     note: Note,
     onClick: () -> Unit,
-    onDelete: () -> Unit
+    onMoveToTrash: () -> Unit
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     var showDeleteConfirmation by remember { mutableStateOf(false) }
@@ -250,7 +257,7 @@ fun NoteCard(
                     if (note.isTask) {
                         Icon(
                             imageVector = if (note.isCompleted) Icons.Default.CheckCircle else Icons.Default.Circle,
-                            contentDescription = if (note.isCompleted) "Task completed" else "Task not completed",
+                            contentDescription = if (note.isCompleted) "Tâche terminée" else "Tâche non terminée",
                             tint = if (note.isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
@@ -270,7 +277,7 @@ fun NoteCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete note",
+                        contentDescription = "Supprimer la note",
                         tint = MaterialTheme.colorScheme.error
                     )
                 }
@@ -320,8 +327,9 @@ fun NoteCard(
     if (showDeleteConfirmation) {
         DeleteConfirmationDialog(
             note = note,
+            isPermanentDelete = false,
             onConfirm = {
-                onDelete()
+                onMoveToTrash()
                 showDeleteConfirmation = false
             },
             onDismiss = {
@@ -330,10 +338,3 @@ fun NoteCard(
         )
     }
 }
-
-
-@Composable
-fun ColorScheme.isLight(): Boolean {
-    return this.background.luminance() > 0.5
-}
-//private fun MaterialTheme.colorScheme.isLight() = this.background.luminance() > 0.5

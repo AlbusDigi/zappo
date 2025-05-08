@@ -14,6 +14,8 @@ data class Note(
     val isTask: Boolean = false, // Indique si c'est une note ou une tâche
     val isCompleted: Boolean = false,
     val dueDate: Date? = null,// Pour les tâches uniquement
+    val isInTrash: Boolean = false,
+    val deletedAt : Date? = null,
     val createdAt: Date = Date(),
     val modifiedAt: Date = Date()
 )
