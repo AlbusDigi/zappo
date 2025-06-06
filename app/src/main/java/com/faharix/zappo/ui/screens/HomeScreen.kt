@@ -31,7 +31,8 @@ fun HomeScreen(
     onNoteClick: (Int) -> Unit,
     onAddNoteClick: () -> Unit,
     onDeleteNote: (Note) -> Unit,
-    onToggleTheme: () -> Unit
+    onToggleTheme: () -> Unit,
+    onNavigateToTrash: () -> Unit
 ) {
     var selectedContentType by remember { mutableStateOf(ContentType.NOTES) }
     var isSearchActive by remember { mutableStateOf(false) }
@@ -57,6 +58,9 @@ fun HomeScreen(
                                 Icons.Default.DarkMode else Icons.Default.LightMode,
                             contentDescription = "Toggle theme"
                         )
+                    }
+                    IconButton(onClick = onNavigateToTrash) {
+                        Icon(Icons.Filled.RestoreFromTrash, contentDescription = "Open Trash")
                     }
                 }
             )

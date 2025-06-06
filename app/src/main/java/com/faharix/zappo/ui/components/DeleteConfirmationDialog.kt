@@ -72,14 +72,14 @@ fun DeleteConfirmationDialog(
 
                     // Titre
                     Text(
-                        text = "Supprimer ${if (note.isTask) "cette tâche" else "cette note"} ?",
+                        text = "Move ${if (note.isTask) "this task" else "this note"} to Trash?",
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold
                     )
 
                     // Message
                     Text(
-                        text = "Êtes-vous sûr de vouloir supprimer ${if (note.isTask) "la tâche" else "la note"} \"${note.title}\" ? Cette action est irréversible.",
+                        text = "Move ${if (note.isTask) "task" else "note"} \"${note.title}\" to trash? You can restore it later from the trash screen.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -123,7 +123,7 @@ fun DeleteConfirmationDialog(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Supprimer")
+                            Text("Move to Trash")
                         }
                     }
                 }

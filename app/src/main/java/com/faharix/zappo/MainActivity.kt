@@ -18,6 +18,7 @@ import androidx.navigation.compose.rememberNavController
 import com.faharix.zappo.ui.screens.ContentType
 import com.faharix.zappo.ui.screens.EditNoteScreen
 import com.faharix.zappo.ui.screens.HomeScreen
+import com.faharix.zappo.ui.screens.TrashScreen
 import com.faharix.zappo.ui.theme.ZappoTheme
 import com.faharix.zappo.viewmodel.NotesViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -49,8 +50,15 @@ class MainActivity : ComponentActivity() {
                                 onAddNoteClick = {
                                     navController.navigate("edit/-1")
                                 },
-                                onDeleteNote = notesViewModel::deleteNote,
-                                onToggleTheme = { darkTheme = !darkTheme }
+                                onDeleteNote = notesViewModel::deleteNote, // This now means "move to trash"
+                                onToggleTheme = { darkTheme = !darkTheme },
+                                onNavigateToTrash = { navController.navigate("trash") } // New lambda
+                            )
+                        }
+                        composable("trash") {
+                            TrashScreen(
+                                notesViewModel = notesViewModel, // Pass the existing view model
+                                onNavigateBack = { navController.popBackStack() }
                             )
                         }
                         composable("edit/{noteId}") { backStackEntry ->

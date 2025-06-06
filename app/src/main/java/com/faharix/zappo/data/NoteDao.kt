@@ -7,13 +7,14 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.util.Date
 
 @Dao
 interface NoteDao {
-    @Query("SELECT * FROM notes ORDER BY modifiedAt DESC")
+    @Query("SELECT * FROM notes WHERE isDeleted = 0 ORDER BY modifiedAt DESC")
     fun getAllNotes(): Flow<List<Note>>
 
-    @Query("SELECT * FROM notes WHERE title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%' ORDER BY modifiedAt DESC")
+    @Query("SELECT * FROM notes WHERE isDeleted = 0 AND (title LIKE '%' || :query || '%' OR content LIKE '%' || :query || '%') ORDER BY modifiedAt DESC")
     fun searchNotes(query: String): Flow<List<Note>>
 
     @Query("SELECT DISTINCT folder FROM notes WHERE folder IS NOT NULL ORDER BY folder")
@@ -28,6 +29,19 @@ interface NoteDao {
     @Update
     suspend fun updateNote(note: Note)
 
+    // Soft delete a note
+    @Query("UPDATE notes SET isDeleted = 1, modifiedAt = :timestamp WHERE id = :noteId")
+    suspend fun deleteNote(noteId: Int, timestamp: Date = Date())
+
+    // Permanently delete a note
     @Delete
-    suspend fun deleteNote(note: Note)
+    suspend fun permanentlyDeleteNote(note: Note)
+
+    // Restore a soft-deleted note
+    @Query("UPDATE notes SET isDeleted = 0, modifiedAt = :timestamp WHERE id = :noteId")
+    suspend fun restoreNote(noteId: Int, timestamp: Date = Date())
+
+    // Get all soft-deleted notes
+    @Query("SELECT * FROM notes WHERE isDeleted = 1 ORDER BY modifiedAt DESC")
+    fun getDeletedNotes(): Flow<List<Note>>
 }

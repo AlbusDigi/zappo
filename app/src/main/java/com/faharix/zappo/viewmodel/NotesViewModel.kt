@@ -37,15 +37,13 @@ class NotesViewModel @Inject constructor(
     val folders = repository.getAllFolders()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    val deletedNotes: StateFlow<List<Note>> = repository.getDeletedNotes()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
 
-    fun addNote(title: String, content: String, folder: String? = null, isTask: Boolean = false, isCompleted: Boolean = false) {
-        viewModelScope.launch {
-            repository.insertNote(title, content, folder, isTask, isCompleted)
-        }
-    }
     fun addNote(
         title: String,
         content: String,
@@ -73,12 +71,6 @@ class NotesViewModel @Inject constructor(
         }
     }
 
-    fun updateNote(id: Int, title: String, content: String, folder: String? = null, isTask: Boolean = false, isCompleted: Boolean = false) {
-        viewModelScope.launch {
-            repository.updateNote(id, title, content, folder, isTask, isCompleted)
-        }
-    }
-
     fun toggleTaskCompletion(note: Note) {
         if (note.isTask) {
             viewModelScope.launch {
@@ -97,6 +89,18 @@ class NotesViewModel @Inject constructor(
     fun deleteNote(note: Note) {
         viewModelScope.launch {
             repository.deleteNote(note)
+        }
+    }
+
+    fun restoreNote(note: Note) {
+        viewModelScope.launch {
+            repository.restoreNote(note)
+        }
+    }
+
+    fun permanentlyDeleteNote(note: Note) {
+        viewModelScope.launch {
+            repository.permanentlyDeleteNote(note)
         }
     }
 }
