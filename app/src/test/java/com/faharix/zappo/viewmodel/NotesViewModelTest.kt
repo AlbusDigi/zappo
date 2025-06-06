@@ -67,18 +67,19 @@ class NotesViewModelTest {
         val textFormatting = "{\"bold\": true}"
         val reminderDateTime = System.currentTimeMillis()
         val reminderRecurrence = "Daily"
+        val audioFilePath = "path/to/audio.mp3"
 
         // When
         viewModel.addNote(
             title, content, folder, isTask, isCompleted, dueDate,
-            imageUris, textFormatting, reminderDateTime, reminderRecurrence
+            imageUris, textFormatting, reminderDateTime, reminderRecurrence, audioFilePath
         )
         testDispatcher.scheduler.advanceUntilIdle() // Ensure coroutine launched by viewModelScope completes
 
         // Then
         verify(mockRepository).insertNote(
             title, content, folder, isTask, isCompleted, dueDate,
-            imageUris, textFormatting, reminderDateTime, reminderRecurrence
+            imageUris, textFormatting, reminderDateTime, reminderRecurrence, audioFilePath
         )
     }
 
@@ -96,18 +97,19 @@ class NotesViewModelTest {
         val textFormatting = "{\"italic\": true}"
         val reminderDateTime = System.currentTimeMillis() + 10000
         val reminderRecurrence = "Weekly"
+        val audioFilePath = "path/to/updated_audio.mp3"
 
         // When
         viewModel.updateNote(
             noteId, title, content, folder, isTask, isCompleted, dueDate,
-            imageUris, textFormatting, reminderDateTime, reminderRecurrence
+            imageUris, textFormatting, reminderDateTime, reminderRecurrence, audioFilePath
         )
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Then
         verify(mockRepository).updateNote(
             noteId, title, content, folder, isTask, isCompleted, dueDate,
-            imageUris, textFormatting, reminderDateTime, reminderRecurrence
+            imageUris, textFormatting, reminderDateTime, reminderRecurrence, audioFilePath
         )
     }
 
@@ -119,6 +121,7 @@ class NotesViewModelTest {
         val originalTextFormatting = "{\"bold\": true, \"color\": \"#FF0000\"}"
         val originalReminderDateTime = System.currentTimeMillis()
         val originalReminderRecurrence = "Daily"
+        val originalAudioFilePath = "path/to/original_audio.mp3"
 
         val testNote = Note(
             id = 1,
@@ -132,6 +135,7 @@ class NotesViewModelTest {
             textFormatting = originalTextFormatting,
             reminderDateTime = originalReminderDateTime,
             reminderRecurrence = originalReminderRecurrence,
+            audioFilePath = originalAudioFilePath,
             createdAt = Date(),
             modifiedAt = Date()
         )
@@ -153,7 +157,8 @@ class NotesViewModelTest {
             originalImageUris,
             originalTextFormatting,
             originalReminderDateTime,
-            originalReminderRecurrence
+            originalReminderRecurrence,
+            originalAudioFilePath
         )
     }
 }

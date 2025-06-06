@@ -54,10 +54,11 @@ class NotesViewModel @Inject constructor(
         imageUris: List<String> = emptyList(),
         textFormatting: String? = null,
         reminderDateTime: Long? = null,
-        reminderRecurrence: String? = null
+        reminderRecurrence: String? = null,
+        audioFilePath: String? = null
     ) {
         viewModelScope.launch {
-            repository.insertNote(title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence)
+            repository.insertNote(title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence, audioFilePath)
         }
     }
 
@@ -72,10 +73,11 @@ class NotesViewModel @Inject constructor(
         imageUris: List<String> = emptyList(),
         textFormatting: String? = null,
         reminderDateTime: Long? = null,
-        reminderRecurrence: String? = null
+        reminderRecurrence: String? = null,
+        audioFilePath: String? = null
     ) {
         viewModelScope.launch {
-            repository.updateNote(id, title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence)
+            repository.updateNote(id, title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence, audioFilePath)
         }
     }
 
@@ -91,9 +93,10 @@ class NotesViewModel @Inject constructor(
                     !note.isCompleted,
                     dueDate = note.dueDate,
                     imageUris = note.imageUris,
-                    textFormatting = note.textFormatting, // Preserve existing textFormatting
-                    reminderDateTime = note.reminderDateTime, // Preserve existing reminderDateTime
-                    reminderRecurrence = note.reminderRecurrence // Preserve existing reminderRecurrence
+                    textFormatting = note.textFormatting,
+                    reminderDateTime = note.reminderDateTime,
+                    reminderRecurrence = note.reminderRecurrence,
+                    audioFilePath = note.audioFilePath // Preserve existing audioFilePath
                 )
             }
         }

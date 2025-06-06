@@ -20,5 +20,6 @@ data class Note(
     val imageUris: List<String>? = null,
     val textFormatting: String? = null,
     val reminderDateTime: Long? = null,
-    val reminderRecurrence: String? = null
+    val reminderRecurrence: String? = null,
+    val audioFilePath: String? = null
 )

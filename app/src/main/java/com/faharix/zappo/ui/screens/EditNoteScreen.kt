@@ -34,8 +34,12 @@ import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.FormatListBulleted
 import androidx.compose.material.icons.filled.FormatListNumbered
 import androidx.compose.material.icons.filled.FormatUnderlined
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Functions
 import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Title
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CreateNewFolder
@@ -85,8 +89,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import android.graphics.BitmapFactory
+import android.media.MediaPlayer
+import android.media.MediaRecorder
 import android.util.Log
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.isGranted
+// import com.google.accompanist.permissions.shouldShowRationale // For optional rationale dialog
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -94,6 +105,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.io.File
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -104,7 +119,7 @@ import java.util.Locale
 fun EditNoteScreen(
     note: Note?,
     contentType: ContentType = ContentType.NOTES,
-    onSaveNote: (String, String, String?, Boolean, Boolean, Date?, List<String>, String?, Long?, String?) -> Unit,
+    onSaveNote: (String, String, String?, Boolean, Boolean, Date?, List<String>, String?, Long?, String?, String?) -> Unit,
     onCancel: () -> Unit
 ) {
     var title by remember { mutableStateOf(note?.title ?: "") }
@@ -123,9 +138,15 @@ fun EditNoteScreen(
     var reminderRecurrence by remember { mutableStateOf(note?.reminderRecurrence) }
     var showReminderDatePickerDialog by remember { mutableStateOf(false) }
     var showRecurrenceDialog by remember { mutableStateOf(false) }
-
+    var isRecording by remember { mutableStateOf(false) }
+    var audioFilePath by remember { mutableStateOf(note?.audioFilePath) }
+    var showDeleteAudioDialog by remember { mutableStateOf(false) }
+    var mediaRecorder: MediaRecorder? by remember { mutableStateOf(null) }
+    var mediaPlayer: MediaPlayer? by remember { mutableStateOf(null) }
+    var isPlayingAudio by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+    val recordAudioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     // Launcher for picking images from the gallery
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -220,7 +241,8 @@ fun EditNoteScreen(
                         imageUris,
                         textFormatting,
                         reminderDateTime,
-                        reminderRecurrence
+                        reminderRecurrence,
+                        audioFilePath
                     )
                 },
                 containerColor = if (isTask)
@@ -412,11 +434,13 @@ fun EditNoteScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Image selection buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
+            // Attachments Toolbar (Images & Audio)
+             Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Image selection buttons
                 IconButton(onClick = { galleryLauncher.launch("image/*") }) {
                     Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Select from Gallery")
                 }
@@ -426,7 +450,107 @@ fun EditNoteScreen(
                 IconButton(onClick = { showImageUrlDialog = true }) {
                     Icon(Icons.Default.Link, contentDescription = "Add Image URL")
                 }
+
+                Spacer(Modifier.weight(0.1f)) // Add some space
+
+                // Audio recording buttons
+                if (audioFilePath == null && !isRecording) {
+                    IconButton(onClick = {
+                        if (recordAudioPermissionState.status.isGranted) {
+                            val newFilePath = File(context.cacheDir, "audio_record_${System.currentTimeMillis()}.mp3").absolutePath
+                            mediaRecorder = MediaRecorder(context).apply {
+                                setAudioSource(MediaRecorder.AudioSource.MIC)
+                                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                                setOutputFile(newFilePath)
+                                try {
+                                    prepare()
+                                    start()
+                                    audioFilePath = newFilePath
+                                    isRecording = true
+                                    Log.d("Audio", "Started recording to $newFilePath")
+                                } catch (e: IOException) {
+                                    Log.e("Audio", "MediaRecorder prepare failed: ${e.message}")
+                                    audioFilePath = null
+                                    releaseMediaRecorder(mediaRecorder) {mr -> mediaRecorder = mr}
+                                } catch (e: IllegalStateException) {
+                                    Log.e("Audio", "MediaRecorder start failed: ${e.message}")
+                                    audioFilePath = null
+                                    releaseMediaRecorder(mediaRecorder) {mr -> mediaRecorder = mr}
+                                }
+                            }
+                        } else {
+                            recordAudioPermissionState.launchPermissionRequest()
+                        }
+                    }) {
+                        Icon(Icons.Default.Mic, contentDescription = "Start Recording")
+                    }
+                }
+                if (isRecording) {
+                    IconButton(onClick = {
+                        mediaRecorder?.let {
+                           releaseMediaRecorder(it) {mr -> mediaRecorder = mr}
+                        }
+                        isRecording = false
+                        Log.d("Audio", "Stopped recording. File at: $audioFilePath")
+                    }) {
+                        Icon(Icons.Default.Stop, contentDescription = "Stop Recording")
+                    }
+                }
+                if (audioFilePath != null && !isRecording) {
+                    IconButton(onClick = {
+                        if (isPlayingAudio) {
+                            mediaPlayer?.let { safeMediaPlayer ->
+                                if (safeMediaPlayer.isPlaying) {
+                                    safeMediaPlayer.stop()
+                                }
+                                safeMediaPlayer.release()
+                            }
+                            mediaPlayer = null
+                            isPlayingAudio = false
+                        } else {
+                            audioFilePath?.let { path ->
+                                mediaPlayer = MediaPlayer().apply {
+                                    try {
+                                        setDataSource(path)
+                                        setOnCompletionListener {
+                                            isPlayingAudio = false
+                                            it.release()
+                                            mediaPlayer = null
+                                            Log.d("Audio", "Playback completed.")
+                                        }
+                                        setOnErrorListener { mp, what, extra ->
+                                            Log.e("Audio", "MediaPlayer error: what $what, extra $extra")
+                                            isPlayingAudio = false
+                                            mp.release()
+                                            mediaPlayer = null
+                                            true // Error handled
+                                        }
+                                        prepare()
+                                        start()
+                                        isPlayingAudio = true
+                                        Log.d("Audio", "Started playback for $path")
+                                    } catch (e: Exception) {
+                                        Log.e("Audio", "MediaPlayer setup failed for $path: ${e.message}")
+                                        release() // release on error during setup
+                                        mediaPlayer = null
+                                        isPlayingAudio = false
+                                    }
+                                }
+                            }
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (isPlayingAudio) Icons.Default.Stop else Icons.Default.PlayArrow,
+                            contentDescription = if (isPlayingAudio) "Stop Playback" else "Play Recording"
+                        )
+                    }
+                    IconButton(onClick = { showDeleteAudioDialog = true }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete Recording")
+                    }
+                }
             }
+
 
             // Image preview area
             if (imageUris.isNotEmpty()) {
@@ -439,15 +563,19 @@ fun EditNoteScreen(
                                 .padding(4.dp)
                         ) {
                             // Placeholder for image display
-                            // In a real app, use Coil or Glide to load the image from URI
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Text("Img: ${uriString.takeLast(10)}") // Show last 10 chars of URI
+                                Text("Img: ${uriString.takeLast(10)}")
                             }
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(8.dp))
             }
+             // Display Audio File Path if exists
+            audioFilePath?.let {
+                Text("Audio: $it", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 4.dp))
+            }
+
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -581,7 +709,81 @@ fun EditNoteScreen(
                 onDismiss = { showRecurrenceDialog = false }
             )
         }
+
+        // Delete Audio Confirmation Dialog
+        if (showDeleteAudioDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteAudioDialog = false },
+                title = { Text("Delete Audio Recording?") },
+                text = { Text("Are you sure you want to delete this audio recording?") },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            if (isRecording) {
+                                mediaRecorder?.let { mr -> releaseMediaRecorder(mr) { mediaRecorder = null } }
+                                isRecording = false
+                            }
+                            if (isPlayingAudio) {
+                                mediaPlayer?.let { mp ->
+                                    if (mp.isPlaying) mp.stop()
+                                    mp.release()
+                                }
+                                mediaPlayer = null
+                                isPlayingAudio = false
+                            }
+                            audioFilePath?.let { path ->
+                                try {
+                                    File(path).delete()
+                                    Log.d("Audio", "File deleted: $path")
+                                } catch (e: SecurityException) {
+                                    Log.e("Audio", "Failed to delete file: $path", e)
+                                }
+                            }
+                            audioFilePath = null
+                            showDeleteAudioDialog = false
+                        }
+                    ) { Text("Delete") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteAudioDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaRecorder?.let {
+                if (isRecording) {
+                    try { it.stop() } catch (e: IllegalStateException) { Log.e("Audio", "MediaRecorder stop on dispose failed: ${e.message}" ) }
+                }
+                releaseMediaRecorder(it) { mediaRecorder = null }
+            }
+            mediaPlayer?.let {
+                if (it.isPlaying) it.stop()
+                it.release()
+                mediaPlayer = null // Ensure mediaPlayer state is also cleared
+                isPlayingAudio = false
+            }
+        }
+    }
+}
+
+private fun releaseMediaRecorder(recorder: MediaRecorder?, setMediaRecorderNull: (MediaRecorder?) -> Unit) {
+    recorder?.apply {
+        try {
+            // If just reset() and release() are called, an explicit stop() might be needed first
+            // if the recorder was in a recording state. However, stop() is called before this
+            // in most flows now. This function primarily ensures reset and release.
+            reset() // Resets the recorder to its idle state.
+            release() // Releases a MediaRecorder object.
+        } catch (e: Exception) {
+            Log.e("Audio", "Error releasing media recorder: ${e.message}")
+        }
+    }
+    setMediaRecorderNull(null)
 }
 
 @Composable
