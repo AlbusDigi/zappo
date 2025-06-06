@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class], version = 4) // Version incremented to 4
+@Database(entities = [Note::class], version = 5) // Version incremented to 5
 @TypeConverters(Converters::class) // Pour les conversions de Date
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
@@ -41,6 +41,16 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 4 to 5: Add imageUris, textFormatting, reminderDateTime, reminderRecurrence columns
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE notes ADD COLUMN imageUris TEXT") // Storing List<String> as TEXT
+                database.execSQL("ALTER TABLE notes ADD COLUMN textFormatting TEXT")
+                database.execSQL("ALTER TABLE notes ADD COLUMN reminderDateTime INTEGER") // Storing Long? as INTEGER
+                database.execSQL("ALTER TABLE notes ADD COLUMN reminderRecurrence TEXT")
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -48,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "notes_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4) // Added MIGRATION_3_4
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // Added MIGRATION_4_5
                     .build()
                 INSTANCE = instance
                 instance

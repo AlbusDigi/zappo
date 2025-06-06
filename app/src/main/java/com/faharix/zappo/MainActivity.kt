@@ -71,11 +71,11 @@ class MainActivity : ComponentActivity() {
                             EditNoteScreen(
                                 note = note,
                                 contentType = if (note?.isTask == true) ContentType.TASKS else ContentType.NOTES,
-                                onSaveNote = { title, content, folder, isTask, isCompleted, dueDate ->
+                                onSaveNote = { title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence ->
                                     if (noteId == -1) {
-                                        notesViewModel.addNote(title, content, folder, isTask, isCompleted, dueDate)
+                                        notesViewModel.addNote(title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence)
                                     } else {
-                                        notesViewModel.updateNote(noteId, title, content, folder, isTask, isCompleted, dueDate)
+                                        notesViewModel.updateNote(noteId, title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence)
                                     }
                                     navController.popBackStack()
                                 },
