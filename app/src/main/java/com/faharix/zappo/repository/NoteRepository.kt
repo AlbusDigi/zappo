@@ -19,25 +19,6 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
 
     suspend fun getNoteById(id: Int): Note? = noteDao.getNoteById(id)
 
-    suspend fun insertNote(
-        title: String,
-        content: String,
-        folder: String? = null,
-        isTask: Boolean = false,
-        isCompleted: Boolean = false
-    ): Long {
-        val note = Note(
-            title = title,
-            content = content,
-            folder = folder,
-            isTask = isTask,
-            isCompleted = isCompleted,
-            createdAt = Date(),
-            modifiedAt = Date()
-        )
-        return noteDao.insertNote(note)
-    }
-
     // Dans NoteRepository.kt, mettez à jour les méthodes pour prendre en charge la date d'échéance
     suspend fun insertNote(
         title: String,
@@ -85,6 +66,16 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
     }
 
     suspend fun deleteNote(note: Note) {
-        noteDao.deleteNote(note)
+        noteDao.deleteNote(note.id, Date())
+    }
+
+    fun getDeletedNotes(): Flow<List<Note>> = noteDao.getDeletedNotes()
+
+    suspend fun restoreNote(note: Note) {
+        noteDao.restoreNote(note.id, Date())
+    }
+
+    suspend fun permanentlyDeleteNote(note: Note) {
+        noteDao.permanentlyDeleteNote(note)
     }
 }
