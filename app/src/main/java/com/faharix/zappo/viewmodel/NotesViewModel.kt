@@ -50,10 +50,14 @@ class NotesViewModel @Inject constructor(
         folder: String? = null,
         isTask: Boolean = false,
         isCompleted: Boolean = false,
-        dueDate: Date? = null
+        dueDate: Date? = null,
+        imageUris: List<String> = emptyList(),
+        textFormatting: String? = null,
+        reminderDateTime: Long? = null,
+        reminderRecurrence: String? = null
     ) {
         viewModelScope.launch {
-            repository.insertNote(title, content, folder, isTask, isCompleted, dueDate)
+            repository.insertNote(title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence)
         }
     }
 
@@ -64,10 +68,14 @@ class NotesViewModel @Inject constructor(
         folder: String? = null,
         isTask: Boolean = false,
         isCompleted: Boolean = false,
-        dueDate: Date? = null
+        dueDate: Date? = null,
+        imageUris: List<String> = emptyList(),
+        textFormatting: String? = null,
+        reminderDateTime: Long? = null,
+        reminderRecurrence: String? = null
     ) {
         viewModelScope.launch {
-            repository.updateNote(id, title, content, folder, isTask, isCompleted, dueDate)
+            repository.updateNote(id, title, content, folder, isTask, isCompleted, dueDate, imageUris, textFormatting, reminderDateTime, reminderRecurrence)
         }
     }
 
@@ -80,7 +88,12 @@ class NotesViewModel @Inject constructor(
                     note.content,
                     note.folder,
                     true,
-                    !note.isCompleted
+                    !note.isCompleted,
+                    dueDate = note.dueDate,
+                    imageUris = note.imageUris,
+                    textFormatting = note.textFormatting, // Preserve existing textFormatting
+                    reminderDateTime = note.reminderDateTime, // Preserve existing reminderDateTime
+                    reminderRecurrence = note.reminderRecurrence // Preserve existing reminderRecurrence
                 )
             }
         }

@@ -26,7 +26,11 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         folder: String? = null,
         isTask: Boolean = false,
         isCompleted: Boolean = false,
-        dueDate: Date? = null
+        dueDate: Date? = null,
+        imageUris: List<String> = emptyList(),
+        textFormatting: String? = null,
+        reminderDateTime: Long? = null,
+        reminderRecurrence: String? = null
     ): Long {
         val note = Note(
             title = title,
@@ -36,7 +40,11 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
             isCompleted = isCompleted,
             dueDate = dueDate,
             createdAt = Date(),
-            modifiedAt = Date()
+            modifiedAt = Date(),
+            imageUris = imageUris,
+            textFormatting = textFormatting,
+            reminderDateTime = reminderDateTime,
+            reminderRecurrence = reminderRecurrence
         )
         return noteDao.insertNote(note)
     }
@@ -48,7 +56,11 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         folder: String? = null,
         isTask: Boolean = false,
         isCompleted: Boolean = false,
-        dueDate: Date? = null
+        dueDate: Date? = null,
+        imageUris: List<String> = emptyList(),
+        textFormatting: String? = null,
+        reminderDateTime: Long? = null,
+        reminderRecurrence: String? = null
     ) {
         val note = noteDao.getNoteById(id)
         note?.let {
@@ -59,7 +71,11 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
                 isTask = isTask,
                 isCompleted = isCompleted,
                 dueDate = dueDate,
-                modifiedAt = Date()
+                modifiedAt = Date(),
+                imageUris = imageUris,
+                textFormatting = textFormatting,
+                reminderDateTime = reminderDateTime,
+                reminderRecurrence = reminderRecurrence
             )
             noteDao.updateNote(updatedNote)
         }

@@ -16,5 +16,9 @@ data class Note(
     val dueDate: Date? = null,// Pour les tâches uniquement
     val isDeleted: Boolean = false,
     val createdAt: Date = Date(),
-    val modifiedAt: Date = Date()
+    val modifiedAt: Date = Date(),
+    val imageUris: List<String> = emptyList(),
+    val textFormatting: String? = null,
+    val reminderDateTime: Long? = null,
+    val reminderRecurrence: String? = null
 )

@@ -21,12 +21,35 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Note
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.filled.FormatAlignRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.AddAPhoto
+import androidx.compose.material.icons.filled.AddPhotoAlternate
+import androidx.compose.material.icons.filled.FormatAlignCenter
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatColorText
+import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.FormatListBulleted
+import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.FormatUnderlined
+import androidx.compose.material.icons.filled.Functions
+import androidx.compose.material.icons.filled.Highlight
+import androidx.compose.material.icons.filled.Title
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Card
+import androidx.compose.material3.TextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
@@ -49,10 +72,22 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.net.Uri
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
+import android.graphics.BitmapFactory
+import android.util.Log
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -69,7 +104,7 @@ import java.util.Locale
 fun EditNoteScreen(
     note: Note?,
     contentType: ContentType = ContentType.NOTES,
-    onSaveNote: (String, String, String?, Boolean, Boolean, Date?) -> Unit,
+    onSaveNote: (String, String, String?, Boolean, Boolean, Date?, List<String>, String?, Long?, String?) -> Unit,
     onCancel: () -> Unit
 ) {
     var title by remember { mutableStateOf(note?.title ?: "") }
@@ -80,6 +115,43 @@ fun EditNoteScreen(
     var dueDate by remember { mutableStateOf<Date?>(null) }
     var showFolderDialog by remember { mutableStateOf(false) }
     var showDatePicker by remember { mutableStateOf(false) }
+    var imageUris by remember { mutableStateOf(note?.imageUris ?: emptyList<String>()) }
+    var showImageUrlDialog by remember { mutableStateOf(false) }
+    var imageUrlInput by remember { mutableStateOf("") }
+    var textFormatting by remember { mutableStateOf(note?.textFormatting) }
+    var reminderDateTime by remember { mutableStateOf(note?.reminderDateTime) }
+    var reminderRecurrence by remember { mutableStateOf(note?.reminderRecurrence) }
+    var showReminderDatePickerDialog by remember { mutableStateOf(false) }
+    var showRecurrenceDialog by remember { mutableStateOf(false) }
+
+
+    val context = LocalContext.current
+
+    // Launcher for picking images from the gallery
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetMultipleContents()
+    ) { uris: List<Uri> ->
+        imageUris = imageUris + uris.map { it.toString() }
+    }
+
+    // Launcher for taking a picture with the camera
+    // TODO: Implement camera launcher and permission handling
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview() // Or TakePicture for saving to a file
+    ) { bitmap ->
+        // Handle the bitmap (e.g., save it to a file and get the URI)
+        // For now, let's assume we get a URI directly or after saving
+        // This part needs proper implementation for saving the image and getting its URI
+        bitmap?.let {
+            // Placeholder: Convert bitmap to URI (this is not a real URI that persists)
+            // You'll need to save the bitmap to storage and get a content URI
+            // For demonstration, adding a placeholder string.
+            // In a real app, save bitmap to a file and use its URI.
+            // val uri = saveBitmapAndGetUri(context, it) // You'd need this helper
+            // imageUris = imageUris + uri.toString()
+        }
+    }
+
 
     val isNewNote = note == null
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -144,7 +216,11 @@ fun EditNoteScreen(
                         if (folder.isBlank()) null else folder.trim(),
                         isTask,
                         isCompleted,
-                        dueDate
+                        dueDate,
+                        imageUris,
+                        textFormatting,
+                        reminderDateTime,
+                        reminderRecurrence
                     )
                 },
                 containerColor = if (isTask)
@@ -263,6 +339,59 @@ fun EditNoteScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Text Formatting Toolbar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()) // Make it scrollable if icons don't fit
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Basic formatting
+                IconButton(onClick = { Log.d("Formatting", "Bold clicked") }) {
+                    Icon(Icons.Default.FormatBold, contentDescription = "Bold")
+                }
+                IconButton(onClick = { Log.d("Formatting", "Italic clicked") }) {
+                    Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
+                }
+                IconButton(onClick = { Log.d("Formatting", "Underline clicked") }) {
+                    Icon(Icons.Default.FormatUnderlined, contentDescription = "Underline")
+                }
+                // Lists
+                IconButton(onClick = { Log.d("Formatting", "Bulleted List clicked") }) {
+                    Icon(Icons.Default.FormatListBulleted, contentDescription = "Bulleted List")
+                }
+                IconButton(onClick = { Log.d("Formatting", "Numbered List clicked") }) {
+                    Icon(Icons.Default.FormatListNumbered, contentDescription = "Numbered List")
+                }
+                // Headings (placeholder for dropdown/dialog)
+                IconButton(onClick = { Log.d("Formatting", "Headings clicked") }) {
+                    Icon(Icons.Default.Title, contentDescription = "Headings")
+                }
+                // Text Color (placeholder for dialog)
+                IconButton(onClick = { Log.d("Formatting", "Text Color clicked") }) {
+                    Icon(Icons.Default.FormatColorText, contentDescription = "Text Color")
+                }
+                // Highlight (placeholder for dialog)
+                IconButton(onClick = { Log.d("Formatting", "Highlight clicked") }) {
+                    Icon(Icons.Default.Highlight, contentDescription = "Highlight Text")
+                }
+                // Alignment
+                IconButton(onClick = { Log.d("Formatting", "Align Left clicked") }) {
+                    Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, contentDescription = "Align Left")
+                }
+                IconButton(onClick = { Log.d("Formatting", "Align Center clicked") }) {
+                    Icon(Icons.Default.FormatAlignCenter, contentDescription = "Align Center")
+                }
+                IconButton(onClick = { Log.d("Formatting", "Align Right clicked") }) {
+                    Icon(Icons.AutoMirrored.Filled.FormatAlignRight, contentDescription = "Align Right")
+                }
+                 IconButton(onClick = { Log.d("Formatting", "LaTeX/Math clicked") }) {
+                    Icon(Icons.Default.Functions, contentDescription = "LaTeX/Math")
+                }
+            }
+
+
             // Champ de contenu
             OutlinedTextField(
                 value = content,
@@ -279,6 +408,131 @@ fun EditNoteScreen(
                         MaterialTheme.colorScheme.primary,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Image selection buttons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                IconButton(onClick = { galleryLauncher.launch("image/*") }) {
+                    Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Select from Gallery")
+                }
+                IconButton(onClick = { /* TODO: Implement camera permission and launch */ cameraLauncher.launch(null) }) {
+                    Icon(Icons.Default.AddAPhoto, contentDescription = "Take Photo")
+                }
+                IconButton(onClick = { showImageUrlDialog = true }) {
+                    Icon(Icons.Default.Link, contentDescription = "Add Image URL")
+                }
+            }
+
+            // Image preview area
+            if (imageUris.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(modifier = Modifier.fillMaxWidth()) {
+                    items(imageUris) { uriString ->
+                        Card(
+                            modifier = Modifier
+                                .size(100.dp)
+                                .padding(4.dp)
+                        ) {
+                            // Placeholder for image display
+                            // In a real app, use Coil or Glide to load the image from URI
+                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                                Text("Img: ${uriString.takeLast(10)}") // Show last 10 chars of URI
+                            }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Reminder Settings
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .clickable { showReminderDatePickerDialog = true }
+                    .padding(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Alarm,
+                    contentDescription = "Set Reminder",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = reminderDateTime?.let {
+                        SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(it))
+                    } ?: "Set Reminder",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                    .clickable { showRecurrenceDialog = true }
+                    .padding(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Repeat,
+                    contentDescription = "Set Recurrence",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = reminderRecurrence ?: "Set Recurrence",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+        }
+
+        // Dialog for Image URL input
+        if (showImageUrlDialog) {
+            AlertDialog(
+                onDismissRequest = { showImageUrlDialog = false },
+                title = { Text("Add Image URL") },
+                text = {
+                    TextField(
+                        value = imageUrlInput,
+                        onValueChange = { imageUrlInput = it },
+                        label = { Text("Image URL") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (imageUrlInput.isNotBlank()) {
+                            imageUris = imageUris + imageUrlInput
+                            imageUrlInput = ""
+                        }
+                        showImageUrlDialog = false
+                    }) {
+                        Text("Add")
+                    }
+                },
+                dismissButton = {
+                    Button(onClick = { showImageUrlDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
             )
         }
 
@@ -304,7 +558,143 @@ fun EditNoteScreen(
                 }
             )
         }
+
+        // Reminder Date Picker Dialog
+        if (showReminderDatePickerDialog) {
+            ReminderDatePickerDialog(
+                onDismiss = { showReminderDatePickerDialog = false },
+                onDateTimeSelected = { dateTimeMillis ->
+                    reminderDateTime = dateTimeMillis
+                    showReminderDatePickerDialog = false
+                }
+            )
+        }
+
+        // Recurrence Selection Dialog
+        if (showRecurrenceDialog) {
+            RecurrenceSelectionDialog(
+                currentRecurrence = reminderRecurrence,
+                onRecurrenceSelected = {
+                    reminderRecurrence = if (it == "None") null else it
+                    showRecurrenceDialog = false
+                },
+                onDismiss = { showRecurrenceDialog = false }
+            )
+        }
     }
+}
+
+@Composable
+fun ReminderDatePickerDialog(
+    onDismiss: () -> Unit,
+    onDateTimeSelected: (Long) -> Unit
+) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    var selectedYear by remember { mutableStateOf(calendar.get(Calendar.YEAR)) }
+    var selectedMonth by remember { mutableStateOf(calendar.get(Calendar.MONTH)) }
+    var selectedDay by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
+    var selectedHour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY)) }
+    var selectedMinute by remember { mutableStateOf(calendar.get(Calendar.MINUTE)) }
+
+    // Simple Date Picker (can be replaced with Material3 DatePicker when stable or a library)
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Reminder Date and Time") },
+        text = {
+            Column {
+                // Date selection (simplified)
+                Text("Date: $selectedDay/${selectedMonth + 1}/$selectedYear")
+                Button(onClick = {
+                    android.app.DatePickerDialog(
+                        context,
+                        { _, year, month, dayOfMonth ->
+                            selectedYear = year
+                            selectedMonth = month
+                            selectedDay = dayOfMonth
+                        },
+                        selectedYear,
+                        selectedMonth,
+                        selectedDay
+                    ).show()
+                }) {
+                    Text("Select Date")
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                // Time selection (simplified)
+                Text("Time: $selectedHour:$selectedMinute")
+                Button(onClick = {
+                    android.app.TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            selectedHour = hourOfDay
+                            selectedMinute = minute
+                        },
+                        selectedHour,
+                        selectedMinute,
+                        true // 24 hour view
+                    ).show()
+                }) {
+                    Text("Select Time")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    calendar.set(selectedYear, selectedMonth, selectedDay, selectedHour, selectedMinute)
+                    onDateTimeSelected(calendar.timeInMillis)
+                }
+            ) {
+                Text("Set Reminder")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+@Composable
+fun RecurrenceSelectionDialog(
+    currentRecurrence: String?,
+    onRecurrenceSelected: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val recurrenceOptions = listOf("None", "Daily", "Weekly", "Monthly", "Yearly")
+    var expanded by remember { mutableStateOf(false) } // Not used for AlertDialog, but good for DropdownMenu
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Select Recurrence") },
+        text = {
+            Column {
+                recurrenceOptions.forEach { option ->
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { onRecurrenceSelected(option) }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = currentRecurrence == option || (currentRecurrence == null && option == "None"),
+                            onClick = { onRecurrenceSelected(option) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(option)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        }
+    )
 }
 
 @Composable
