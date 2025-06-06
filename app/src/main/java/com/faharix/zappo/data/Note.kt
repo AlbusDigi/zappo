@@ -17,7 +17,7 @@ data class Note(
     val isDeleted: Boolean = false,
     val createdAt: Date = Date(),
     val modifiedAt: Date = Date(),
-    val imageUris: List<String> = emptyList(),
+    val imageUris: List<String>? = null,
     val textFormatting: String? = null,
     val reminderDateTime: Long? = null,
     val reminderRecurrence: String? = null
