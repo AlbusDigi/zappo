@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
-@Database(entities = [Note::class], version = 5) // Version incremented to 5
+@Database(entities = [Note::class], version = 6) // Version incremented to 6
 @TypeConverters(Converters::class) // Pour les conversions de Date
 abstract class AppDatabase : RoomDatabase() {
     abstract fun noteDao(): NoteDao
@@ -51,6 +51,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // Migration from version 5 to 6: Add audioFilePath column
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE notes ADD COLUMN audioFilePath TEXT") // Storing String? as TEXT, allows NULL
+            }
+        }
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -58,7 +65,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "notes_database"
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5) // Added MIGRATION_4_5
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6) // Added MIGRATION_5_6
                     .build()
                 INSTANCE = instance
                 instance

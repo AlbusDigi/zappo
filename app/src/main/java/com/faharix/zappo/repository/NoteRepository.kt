@@ -30,7 +30,8 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         imageUris: List<String> = emptyList(),
         textFormatting: String? = null,
         reminderDateTime: Long? = null,
-        reminderRecurrence: String? = null
+        reminderRecurrence: String? = null,
+        audioFilePath: String? = null
     ): Long {
         val note = Note(
             title = title,
@@ -44,7 +45,8 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
             imageUris = imageUris,
             textFormatting = textFormatting,
             reminderDateTime = reminderDateTime,
-            reminderRecurrence = reminderRecurrence
+            reminderRecurrence = reminderRecurrence,
+            audioFilePath = audioFilePath
         )
         return noteDao.insertNote(note)
     }
@@ -60,7 +62,8 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         imageUris: List<String> = emptyList(),
         textFormatting: String? = null,
         reminderDateTime: Long? = null,
-        reminderRecurrence: String? = null
+        reminderRecurrence: String? = null,
+        audioFilePath: String? = null
     ) {
         val note = noteDao.getNoteById(id)
         note?.let {
@@ -75,7 +78,8 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
                 imageUris = imageUris,
                 textFormatting = textFormatting,
                 reminderDateTime = reminderDateTime,
-                reminderRecurrence = reminderRecurrence
+                reminderRecurrence = reminderRecurrence,
+                audioFilePath = audioFilePath
             )
             noteDao.updateNote(updatedNote)
         }
