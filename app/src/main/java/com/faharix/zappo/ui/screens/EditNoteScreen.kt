@@ -3,116 +3,30 @@ package com.faharix.zappo.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Note
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
-import androidx.compose.material.icons.automirrored.filled.FormatAlignRight
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.AddAPhoto
-import androidx.compose.material.icons.filled.AddPhotoAlternate
-import androidx.compose.material.icons.filled.FormatAlignCenter
-import androidx.compose.material.icons.filled.FormatBold
-import androidx.compose.material.icons.filled.FormatColorText
-import androidx.compose.material.icons.filled.FormatItalic
-import androidx.compose.material.icons.filled.FormatListBulleted
-import androidx.compose.material.icons.filled.FormatListNumbered
-import androidx.compose.material.icons.filled.FormatUnderlined
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Functions
-import androidx.compose.material.icons.filled.Highlight
-import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Title
-import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material.icons.filled.CreateNewFolder
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.Repeat
-import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Card
-import androidx.compose.material3.TextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import android.Manifest
-import android.net.Uri
-import androidx.compose.foundation.Image
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalContext
-import android.graphics.BitmapFactory
-import android.media.MediaPlayer
-import android.media.MediaRecorder
-import android.util.Log
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.isGranted
-// import com.google.accompanist.permissions.shouldShowRationale // For optional rationale dialog
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.faharix.zappo.data.Note
+import com.faharix.zappo.ui.theme.FahariXGradientColors
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.io.File
-import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,893 +52,770 @@ fun EditNoteScreen(
     var reminderRecurrence by remember { mutableStateOf(note?.reminderRecurrence) }
     var showReminderDatePickerDialog by remember { mutableStateOf(false) }
     var showRecurrenceDialog by remember { mutableStateOf(false) }
-    var isRecording by remember { mutableStateOf(false) }
     var audioFilePath by remember { mutableStateOf(note?.audioFilePath) }
     var showDeleteAudioDialog by remember { mutableStateOf(false) }
-    var mediaRecorder: MediaRecorder? by remember { mutableStateOf(null) }
-    var mediaPlayer: MediaPlayer? by remember { mutableStateOf(null) }
-    var isPlayingAudio by remember { mutableStateOf(false) }
-
-    val context = LocalContext.current
-    val recordAudioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
-
-    // Launcher for picking images from the gallery
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetMultipleContents()
-    ) { uris: List<Uri> ->
-        imageUris = imageUris + uris.map { it.toString() }
-    }
-
-    // Launcher for taking a picture with the camera
-    // TODO: Implement camera launcher and permission handling
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview() // Or TakePicture for saving to a file
-    ) { bitmap ->
-        // Handle the bitmap (e.g., save it to a file and get the URI)
-        // For now, let's assume we get a URI directly or after saving
-        // This part needs proper implementation for saving the image and getting its URI
-        bitmap?.let {
-            // Placeholder: Convert bitmap to URI (this is not a real URI that persists)
-            // You'll need to save the bitmap to storage and get a content URI
-            // For demonstration, adding a placeholder string.
-            // In a real app, save bitmap to a file and use its URI.
-            // val uri = saveBitmapAndGetUri(context, it) // You'd need this helper
-            // imageUris = imageUris + uri.toString()
-        }
-    }
-
+    var showToolbar by remember { mutableStateOf(false) }
 
     val isNewNote = note == null
     val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (isNewNote) {
-                            if (isTask) "Nouvelle tâche" else "Nouvelle note"
-                        } else {
-                            if (isTask) "Modifier la tâche" else "Modifier la note"
-                        }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        // Top Bar avec gradient FahariX
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Transparent,
+            shadowElevation = if (showToolbar) 4.dp else 2.dp
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)
+                            )
+                        )
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = if (isTask)
-                        MaterialTheme.colorScheme.tertiaryContainer
-                    else
-                        MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = if (isTask)
-                        MaterialTheme.colorScheme.onTertiaryContainer
-                    else
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                ),
-                navigationIcon = {
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     IconButton(onClick = onCancel) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Retour"
-                        )
-                    }
-                },
-                actions = {
-                    // Bouton pour sélectionner un dossier
-                    IconButton(onClick = { showFolderDialog = true }) {
-                        Icon(
-                            imageVector = Icons.Default.Folder,
-                            contentDescription = "Sélectionner un dossier"
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Retour",
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
 
-                    IconButton(onClick = onCancel) {
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    // Actions rapides avec couleurs FahariX
+                    IconButton(onClick = { /* Pin note */ }) {
                         Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Annuler"
+                            imageVector = Icons.Outlined.PushPin,
+                            contentDescription = "Épingler",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    IconButton(onClick = { showReminderDatePickerDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Outlined.NotificationAdd,
+                            contentDescription = "Rappel",
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+
+                    IconButton(onClick = { /* Archive */ }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Archive,
+                            contentDescription = "Archiver",
+                            tint = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }
-            )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = {
-                    if (title.isBlank() && content.isBlank()){
-                        return@FloatingActionButton
-                    }
-                    onSaveNote(
-                        title.trim(),
-                        content.trim(),
-                        if (folder.isBlank()) null else folder.trim(),
-                        isTask,
-                        isCompleted,
-                        dueDate,
-                        imageUris,
-                        textFormatting,
-                        reminderDateTime,
-                        reminderRecurrence,
-                        audioFilePath
-                    )
-                },
-                containerColor = if (isTask)
-                    MaterialTheme.colorScheme.tertiary
-                else
-                    MaterialTheme.colorScheme.primary
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = "Sauvegarder",
-                    tint = if (isTask)
-                        MaterialTheme.colorScheme.onTertiary
-                    else
-                        MaterialTheme.colorScheme.onPrimary
-                )
             }
         }
-    ) { paddingValues ->
+
+        // Contenu principal
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
-            // En-tête avec choix du type (note ou tâche)
-            TypeSelector(
-                isTask = isTask,
-                onTypeChange = { isTask = it }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Afficher le dossier sélectionné s'il y en a un
-            if (folder.isNotEmpty()) {
-                FolderChip(
-                    folderName = folder,
-                    onClick = { showFolderDialog = true }
+            // Type selector avec style FahariX
+            if (isNewNote) {
+                FahariXTypeSelectorStyle(
+                    isTask = isTask,
+                    onTypeChange = { isTask = it }
                 )
-
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Options spécifiques aux tâches
-            AnimatedVisibility(visible = isTask) {
-                Column {
-                    // Option de complétion pour les tâches
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 8.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .clickable { isCompleted = !isCompleted }
-                            .padding(12.dp)
-                    ) {
-                        Checkbox(
-                            checked = isCompleted,
-                            onCheckedChange = { isCompleted = it },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = MaterialTheme.colorScheme.tertiary,
-                                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                        Text(
-                            text = if (isCompleted) "Tâche complétée" else "Tâche à faire",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-
-                    // Date d'échéance pour les tâches
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(bottom = 16.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-                            .clickable { showDatePicker = true }
-                            .padding(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.CalendarToday,
-                            contentDescription = "Date d'échéance",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = if (dueDate != null)
-                                "Échéance: ${dateFormat.format(dueDate!!)}"
-                            else
-                                "Ajouter une date d'échéance",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
+            // Folder chip avec gradient
+            if (folder.isNotEmpty()) {
+                FahariXFolderChip(
+                    folderName = folder,
+                    onClick = { showFolderDialog = true }
+                )
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            // Champ de titre
-            OutlinedTextField(
+            // Task completion avec style FahariX
+            AnimatedVisibility(visible = isTask) {
+                FahariXTaskCompletionRow(
+                    isCompleted = isCompleted,
+                    onToggle = { isCompleted = it }
+                )
+            }
+
+            // Title field avec style FahariX
+            TextField(
                 value = title,
                 onValueChange = { title = it },
-                label = { Text("Titre") },
+                placeholder = {
+                    Text(
+                        "Titre",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
-                textStyle = MaterialTheme.typography.titleLarge,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (isTask)
-                        MaterialTheme.colorScheme.tertiary
-                    else
-                        MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
+                textStyle = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = MaterialTheme.colorScheme.primary,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                ),
+                maxLines = 3
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Text Formatting Toolbar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()) // Make it scrollable if icons don't fit
-                    .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Basic formatting
-                IconButton(onClick = { Log.d("Formatting", "Bold clicked") }) {
-                    Icon(Icons.Default.FormatBold, contentDescription = "Bold")
-                }
-                IconButton(onClick = { Log.d("Formatting", "Italic clicked") }) {
-                    Icon(Icons.Default.FormatItalic, contentDescription = "Italic")
-                }
-                IconButton(onClick = { Log.d("Formatting", "Underline clicked") }) {
-                    Icon(Icons.Default.FormatUnderlined, contentDescription = "Underline")
-                }
-                // Lists
-                IconButton(onClick = { Log.d("Formatting", "Bulleted List clicked") }) {
-                    Icon(Icons.Default.FormatListBulleted, contentDescription = "Bulleted List")
-                }
-                IconButton(onClick = { Log.d("Formatting", "Numbered List clicked") }) {
-                    Icon(Icons.Default.FormatListNumbered, contentDescription = "Numbered List")
-                }
-                // Headings (placeholder for dropdown/dialog)
-                IconButton(onClick = { Log.d("Formatting", "Headings clicked") }) {
-                    Icon(Icons.Default.Title, contentDescription = "Headings")
-                }
-                // Text Color (placeholder for dialog)
-                IconButton(onClick = { Log.d("Formatting", "Text Color clicked") }) {
-                    Icon(Icons.Default.FormatColorText, contentDescription = "Text Color")
-                }
-                // Highlight (placeholder for dialog)
-                IconButton(onClick = { Log.d("Formatting", "Highlight clicked") }) {
-                    Icon(Icons.Default.Highlight, contentDescription = "Highlight Text")
-                }
-                // Alignment
-                IconButton(onClick = { Log.d("Formatting", "Align Left clicked") }) {
-                    Icon(Icons.AutoMirrored.Filled.FormatAlignLeft, contentDescription = "Align Left")
-                }
-                IconButton(onClick = { Log.d("Formatting", "Align Center clicked") }) {
-                    Icon(Icons.Default.FormatAlignCenter, contentDescription = "Align Center")
-                }
-                IconButton(onClick = { Log.d("Formatting", "Align Right clicked") }) {
-                    Icon(Icons.AutoMirrored.Filled.FormatAlignRight, contentDescription = "Align Right")
-                }
-                 IconButton(onClick = { Log.d("Formatting", "LaTeX/Math clicked") }) {
-                    Icon(Icons.Default.Functions, contentDescription = "LaTeX/Math")
-                }
-            }
-
-
-            // Champ de contenu
-            OutlinedTextField(
-                value = content,
-                onValueChange = { content = it },
-                label = { Text(if (isTask) "Description de la tâche" else "Contenu de la note") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                textStyle = MaterialTheme.typography.bodyLarge,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = if (isTask)
-                        MaterialTheme.colorScheme.tertiary
-                    else
-                        MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Attachments Toolbar (Images & Audio)
-             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Image selection buttons
-                IconButton(onClick = { galleryLauncher.launch("image/*") }) {
-                    Icon(Icons.Default.AddPhotoAlternate, contentDescription = "Select from Gallery")
-                }
-                IconButton(onClick = { /* TODO: Implement camera permission and launch */ cameraLauncher.launch(null) }) {
-                    Icon(Icons.Default.AddAPhoto, contentDescription = "Take Photo")
-                }
-                IconButton(onClick = { showImageUrlDialog = true }) {
-                    Icon(Icons.Default.Link, contentDescription = "Add Image URL")
-                }
-
-                Spacer(Modifier.weight(0.1f)) // Add some space
-
-                // Audio recording buttons
-                if (audioFilePath == null && !isRecording) {
-                    IconButton(onClick = {
-                        if (recordAudioPermissionState.status.isGranted) {
-                            val newFilePath = File(context.cacheDir, "audio_record_${System.currentTimeMillis()}.mp3").absolutePath
-                            mediaRecorder = MediaRecorder(context).apply {
-                                setAudioSource(MediaRecorder.AudioSource.MIC)
-                                setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                                setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                                setOutputFile(newFilePath)
-                                try {
-                                    prepare()
-                                    start()
-                                    audioFilePath = newFilePath
-                                    isRecording = true
-                                    Log.d("Audio", "Started recording to $newFilePath")
-                                } catch (e: IOException) {
-                                    Log.e("Audio", "MediaRecorder prepare failed: ${e.message}")
-                                    audioFilePath = null
-                                    releaseMediaRecorder(mediaRecorder) {mr -> mediaRecorder = mr}
-                                } catch (e: IllegalStateException) {
-                                    Log.e("Audio", "MediaRecorder start failed: ${e.message}")
-                                    audioFilePath = null
-                                    releaseMediaRecorder(mediaRecorder) {mr -> mediaRecorder = mr}
-                                }
-                            }
-                        } else {
-                            recordAudioPermissionState.launchPermissionRequest()
-                        }
-                    }) {
-                        Icon(Icons.Default.Mic, contentDescription = "Start Recording")
-                    }
-                }
-                if (isRecording) {
-                    IconButton(onClick = {
-                        mediaRecorder?.let {
-                           releaseMediaRecorder(it) {mr -> mediaRecorder = mr}
-                        }
-                        isRecording = false
-                        Log.d("Audio", "Stopped recording. File at: $audioFilePath")
-                    }) {
-                        Icon(Icons.Default.Stop, contentDescription = "Stop Recording")
-                    }
-                }
-                if (audioFilePath != null && !isRecording) {
-                    IconButton(onClick = {
-                        if (isPlayingAudio) {
-                            mediaPlayer?.let { safeMediaPlayer ->
-                                if (safeMediaPlayer.isPlaying) {
-                                    safeMediaPlayer.stop()
-                                }
-                                safeMediaPlayer.release()
-                            }
-                            mediaPlayer = null
-                            isPlayingAudio = false
-                        } else {
-                            audioFilePath?.let { path ->
-                                mediaPlayer = MediaPlayer().apply {
-                                    try {
-                                        setDataSource(path)
-                                        setOnCompletionListener {
-                                            isPlayingAudio = false
-                                            it.release()
-                                            mediaPlayer = null
-                                            Log.d("Audio", "Playback completed.")
-                                        }
-                                        setOnErrorListener { mp, what, extra ->
-                                            Log.e("Audio", "MediaPlayer error: what $what, extra $extra")
-                                            isPlayingAudio = false
-                                            mp.release()
-                                            mediaPlayer = null
-                                            true // Error handled
-                                        }
-                                        prepare()
-                                        start()
-                                        isPlayingAudio = true
-                                        Log.d("Audio", "Started playback for $path")
-                                    } catch (e: Exception) {
-                                        Log.e("Audio", "MediaPlayer setup failed for $path: ${e.message}")
-                                        release() // release on error during setup
-                                        mediaPlayer = null
-                                        isPlayingAudio = false
-                                    }
-                                }
-                            }
-                        }
-                    }) {
-                        Icon(
-                            imageVector = if (isPlayingAudio) Icons.Default.Stop else Icons.Default.PlayArrow,
-                            contentDescription = if (isPlayingAudio) "Stop Playback" else "Play Recording"
-                        )
-                    }
-                    IconButton(onClick = { showDeleteAudioDialog = true }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete Recording")
-                    }
-                }
-            }
-
-
-            // Image preview area
-            if (imageUris.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(modifier = Modifier.fillMaxWidth()) {
-                    items(imageUris) { uriString ->
-                        Card(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(4.dp)
-                        ) {
-                            // Placeholder for image display
-                            Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                                Text("Img: ${uriString.takeLast(10)}")
-                            }
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-             // Display Audio File Path if exists
-            audioFilePath?.let {
-                Text("Audio: $it", style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(vertical = 4.dp))
-            }
-
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Reminder Settings
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .clickable { showReminderDatePickerDialog = true }
-                    .padding(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Alarm,
-                    contentDescription = "Set Reminder",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = reminderDateTime?.let {
-                        SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(it))
-                    } ?: "Set Reminder",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
-                    .clickable { showRecurrenceDialog = true }
-                    .padding(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Repeat,
-                    contentDescription = "Set Recurrence",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = reminderRecurrence ?: "Set Recurrence",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-        }
-
-        // Dialog for Image URL input
-        if (showImageUrlDialog) {
-            AlertDialog(
-                onDismissRequest = { showImageUrlDialog = false },
-                title = { Text("Add Image URL") },
-                text = {
-                    TextField(
-                        value = imageUrlInput,
-                        onValueChange = { imageUrlInput = it },
-                        label = { Text("Image URL") },
-                        modifier = Modifier.fillMaxWidth()
+            // Content field avec style FahariX
+            TextField(
+                value = content,
+                onValueChange = { content = it },
+                placeholder = {
+                    Text(
+                        if (isTask) "Créer une liste..." else "Prendre une note...",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 },
-                confirmButton = {
-                    Button(onClick = {
-                        if (imageUrlInput.isNotBlank()) {
-                            imageUris = imageUris + imageUrlInput
-                            imageUrlInput = ""
-                        }
-                        showImageUrlDialog = false
-                    }) {
-                        Text("Add")
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultMinSize(minHeight = 200.dp),
+                textStyle = MaterialTheme.typography.bodyLarge,
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Images preview avec style FahariX
+            if (imageUris.isNotEmpty()) {
+                FahariXImagePreviewSection(imageUris = imageUris)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Audio preview avec style FahariX
+            audioFilePath?.let {
+                FahariXAudioPreviewSection(
+                    audioPath = it,
+                    onDelete = { showDeleteAudioDialog = true }
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // Bottom toolbar avec gradient FahariX
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Transparent,
+            shadowElevation = 8.dp
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                            )
+                        )
+                    )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Toolbar toggle
+                    IconButton(onClick = { showToolbar = !showToolbar }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = "Plus d'options",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
-                },
-                dismissButton = {
-                    Button(onClick = { showImageUrlDialog = false }) {
-                        Text("Cancel")
-                    }
-                }
-            )
-        }
 
-        // Dialogue pour sélectionner ou créer un dossier
-        if (showFolderDialog) {
-            FolderSelectionDialog(
-                currentFolder = folder,
-                onFolderSelected = { selectedFolder ->
-                    folder = selectedFolder
-                    showFolderDialog = false
-                },
-                onDismiss = { showFolderDialog = false }
-            )
-        }
+                    Spacer(modifier = Modifier.weight(1f))
 
-        // Date Picker pour les tâches
-        if (showDatePicker) {
-            DatePickerDialog(
-                onDismiss = { showDatePicker = false },
-                onDateSelected = {
-                    dueDate = it
-                    showDatePicker = false
-                }
-            )
-        }
-
-        // Reminder Date Picker Dialog
-        if (showReminderDatePickerDialog) {
-            ReminderDatePickerDialog(
-                onDismiss = { showReminderDatePickerDialog = false },
-                onDateTimeSelected = { dateTimeMillis ->
-                    reminderDateTime = dateTimeMillis
-                    showReminderDatePickerDialog = false
-                }
-            )
-        }
-
-        // Recurrence Selection Dialog
-        if (showRecurrenceDialog) {
-            RecurrenceSelectionDialog(
-                currentRecurrence = reminderRecurrence,
-                onRecurrenceSelected = {
-                    reminderRecurrence = if (it == "None") null else it
-                    showRecurrenceDialog = false
-                },
-                onDismiss = { showRecurrenceDialog = false }
-            )
-        }
-
-        // Delete Audio Confirmation Dialog
-        if (showDeleteAudioDialog) {
-            AlertDialog(
-                onDismissRequest = { showDeleteAudioDialog = false },
-                title = { Text("Delete Audio Recording?") },
-                text = { Text("Are you sure you want to delete this audio recording?") },
-                confirmButton = {
+                    // Save button avec style FahariX
                     Button(
                         onClick = {
-                            if (isRecording) {
-                                mediaRecorder?.let { mr -> releaseMediaRecorder(mr) { mediaRecorder = null } }
-                                isRecording = false
+                            if (title.isNotBlank() || content.isNotBlank()) {
+                                onSaveNote(
+                                    title.trim(),
+                                    content.trim(),
+                                    if (folder.isBlank()) null else folder.trim(),
+                                    isTask,
+                                    isCompleted,
+                                    dueDate,
+                                    imageUris,
+                                    textFormatting,
+                                    reminderDateTime,
+                                    reminderRecurrence,
+                                    audioFilePath
+                                )
                             }
-                            if (isPlayingAudio) {
-                                mediaPlayer?.let { mp ->
-                                    if (mp.isPlaying) mp.stop()
-                                    mp.release()
-                                }
-                                mediaPlayer = null
-                                isPlayingAudio = false
-                            }
-                            audioFilePath?.let { path ->
-                                try {
-                                    File(path).delete()
-                                    Log.d("Audio", "File deleted: $path")
-                                } catch (e: SecurityException) {
-                                    Log.e("Audio", "Failed to delete file: $path", e)
-                                }
-                            }
-                            audioFilePath = null
-                            showDeleteAudioDialog = false
-                        }
-                    ) { Text("Delete") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showDeleteAudioDialog = false }) {
-                        Text("Cancel")
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text(
+                            "Terminé",
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
+            }
+        }
+
+        // Expanded toolbar avec style FahariX
+        AnimatedVisibility(visible = showToolbar) {
+            FahariXExpandedToolbar(
+                onImageFromGallery = { /* Implement */ },
+                onImageFromCamera = { /* Implement */ },
+                onImageFromUrl = { showImageUrlDialog = true },
+                onRecordAudio = { /* Implement */ },
+                onSetReminder = { showReminderDatePickerDialog = true },
+                onSelectFolder = { showFolderDialog = true }
             )
         }
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            mediaRecorder?.let {
-                if (isRecording) {
-                    try { it.stop() } catch (e: IllegalStateException) { Log.e("Audio", "MediaRecorder stop on dispose failed: ${e.message}" ) }
+    // Dialogs avec style FahariX
+    if (showFolderDialog) {
+        FahariXFolderSelectionDialog(
+            currentFolder = folder,
+            onFolderSelected = { selectedFolder ->
+                folder = selectedFolder
+                showFolderDialog = false
+            },
+            onDismiss = { showFolderDialog = false }
+        )
+    }
+
+    if (showImageUrlDialog) {
+        FahariXImageUrlDialog(
+            imageUrlInput = imageUrlInput,
+            onImageUrlChange = { imageUrlInput = it },
+            onConfirm = {
+                if (imageUrlInput.isNotBlank()) {
+                    imageUris = imageUris + imageUrlInput
+                    imageUrlInput = ""
                 }
-                releaseMediaRecorder(it) { mediaRecorder = null }
-            }
-            mediaPlayer?.let {
-                if (it.isPlaying) it.stop()
-                it.release()
-                mediaPlayer = null // Ensure mediaPlayer state is also cleared
-                isPlayingAudio = false
-            }
-        }
+                showImageUrlDialog = false
+            },
+            onDismiss = { showImageUrlDialog = false }
+        )
     }
 }
 
-private fun releaseMediaRecorder(recorder: MediaRecorder?, setMediaRecorderNull: (MediaRecorder?) -> Unit) {
-    recorder?.apply {
-        try {
-            // If just reset() and release() are called, an explicit stop() might be needed first
-            // if the recorder was in a recording state. However, stop() is called before this
-            // in most flows now. This function primarily ensures reset and release.
-            reset() // Resets the recorder to its idle state.
-            release() // Releases a MediaRecorder object.
-        } catch (e: Exception) {
-            Log.e("Audio", "Error releasing media recorder: ${e.message}")
-        }
-    }
-    setMediaRecorderNull(null)
-}
-
 @Composable
-fun ReminderDatePickerDialog(
-    onDismiss: () -> Unit,
-    onDateTimeSelected: (Long) -> Unit
-) {
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    var selectedYear by remember { mutableStateOf(calendar.get(Calendar.YEAR)) }
-    var selectedMonth by remember { mutableStateOf(calendar.get(Calendar.MONTH)) }
-    var selectedDay by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
-    var selectedHour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY)) }
-    var selectedMinute by remember { mutableStateOf(calendar.get(Calendar.MINUTE)) }
-
-    // Simple Date Picker (can be replaced with Material3 DatePicker when stable or a library)
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Reminder Date and Time") },
-        text = {
-            Column {
-                // Date selection (simplified)
-                Text("Date: $selectedDay/${selectedMonth + 1}/$selectedYear")
-                Button(onClick = {
-                    android.app.DatePickerDialog(
-                        context,
-                        { _, year, month, dayOfMonth ->
-                            selectedYear = year
-                            selectedMonth = month
-                            selectedDay = dayOfMonth
-                        },
-                        selectedYear,
-                        selectedMonth,
-                        selectedDay
-                    ).show()
-                }) {
-                    Text("Select Date")
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                // Time selection (simplified)
-                Text("Time: $selectedHour:$selectedMinute")
-                Button(onClick = {
-                    android.app.TimePickerDialog(
-                        context,
-                        { _, hourOfDay, minute ->
-                            selectedHour = hourOfDay
-                            selectedMinute = minute
-                        },
-                        selectedHour,
-                        selectedMinute,
-                        true // 24 hour view
-                    ).show()
-                }) {
-                    Text("Select Time")
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    calendar.set(selectedYear, selectedMonth, selectedDay, selectedHour, selectedMinute)
-                    onDateTimeSelected(calendar.timeInMillis)
-                }
-            ) {
-                Text("Set Reminder")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
-
-@Composable
-fun RecurrenceSelectionDialog(
-    currentRecurrence: String?,
-    onRecurrenceSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val recurrenceOptions = listOf("None", "Daily", "Weekly", "Monthly", "Yearly")
-    var expanded by remember { mutableStateOf(false) } // Not used for AlertDialog, but good for DropdownMenu
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Recurrence") },
-        text = {
-            Column {
-                recurrenceOptions.forEach { option ->
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .clickable { onRecurrenceSelected(option) }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = currentRecurrence == option || (currentRecurrence == null && option == "None"),
-                            onClick = { onRecurrenceSelected(option) }
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(option)
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
-            }
-        }
-    )
-}
-
-@Composable
-fun TypeSelector(
+fun FahariXTypeSelectorStyle(
     isTask: Boolean,
     onTypeChange: (Boolean) -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp)
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.surfaceVariant)
+            .clip(RoundedCornerShape(25.dp))
+            .background(
+                brush = Brush.horizontalGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+                    )
+                )
+            )
+            .padding(4.dp)
     ) {
-        // Option Note
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(24.dp))
-                .background(
-                    if (!isTask) MaterialTheme.colorScheme.primaryContainer
-                    else Color.Transparent
-                )
-                .clickable { onTypeChange(false) },
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.Note,
-                    contentDescription = null,
-                    tint = if (!isTask)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Note",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = if (!isTask) FontWeight.Bold else FontWeight.Normal
-                    ),
-                    color = if (!isTask)
-                        MaterialTheme.colorScheme.onPrimaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
+        FahariXTypeOption(
+            text = "Note",
+            icon = Icons.Outlined.Description,
+            isSelected = !isTask,
+            onClick = { onTypeChange(false) },
+            modifier = Modifier.weight(1f),
+            selectedColor = MaterialTheme.colorScheme.primary
+        )
 
-        // Option Tâche
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(24.dp))
-                .background(
-                    if (isTask) MaterialTheme.colorScheme.tertiaryContainer
-                    else Color.Transparent
-                )
-                .clickable { onTypeChange(true) },
-            contentAlignment = Alignment.Center
+        FahariXTypeOption(
+            text = "Liste",
+            icon = Icons.Outlined.CheckBox,
+            isSelected = isTask,
+            onClick = { onTypeChange(true) },
+            modifier = Modifier.weight(1f),
+            selectedColor = MaterialTheme.colorScheme.secondary
+        )
+    }
+}
+
+@Composable
+fun FahariXTypeOption(
+    text: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selectedColor: Color
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (isSelected) selectedColor.copy(alpha = 0.2f)
+                else Color.Transparent
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    tint = if (isTask)
-                        MaterialTheme.colorScheme.onTertiaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Tâche",
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = if (isTask) FontWeight.Bold else FontWeight.Normal
-                    ),
-                    color = if (isTask)
-                        MaterialTheme.colorScheme.onTertiaryContainer
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isSelected) selectedColor else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                ),
+                color = if (isSelected) selectedColor else MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }
 
 @Composable
-fun FolderChip(
+fun FahariXFolderChip(
     folderName: String,
     onClick: () -> Unit
 ) {
     Surface(
-        modifier = Modifier
-            .wrapContentWidth()
-            .clickable(onClick = onClick),
+        modifier = Modifier.clickable(onClick = onClick),
         shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.secondaryContainer
+        color = Color.Transparent
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Box(
+            modifier = Modifier
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.7f),
+                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.7f)
+                        )
+                    ),
+                    shape = RoundedCornerShape(16.dp)
+                )
         ) {
-            Icon(
-                imageVector = Icons.Default.Folder,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = folderName,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSecondaryContainer
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Folder,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = folderName,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
         }
     }
 }
 
 @Composable
-fun FolderSelectionDialog(
+fun FahariXTaskCompletionRow(
+    isCompleted: Boolean,
+    onToggle: (Boolean) -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onToggle(!isCompleted) },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCompleted)
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            else
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = isCompleted,
+                onCheckedChange = onToggle,
+                colors = CheckboxDefaults.colors(
+                    checkedColor = MaterialTheme.colorScheme.secondary,
+                    uncheckedColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = if (isCompleted) "Tâche terminée" else "Tâche en cours",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (isCompleted) {
+                    Text(
+                        text = "Félicitations ! 🎉",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        }
+    }
+    Spacer(modifier = Modifier.height(12.dp))
+}
+
+@Composable
+fun FahariXImagePreviewSection(imageUris: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PhotoLibrary,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Images (${imageUris.size})",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(imageUris) { uri ->
+                    Card(
+                        modifier = Modifier.size(80.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Image,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FahariXAudioPreviewSection(
+    audioPath: String,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(24.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AudioFile,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Enregistrement audio",
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Appuyez pour écouter",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                )
+            }
+
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Supprimer",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun FahariXExpandedToolbar(
+    onImageFromGallery: () -> Unit,
+    onImageFromCamera: () -> Unit,
+    onImageFromUrl: () -> Unit,
+    onRecordAudio: () -> Unit,
+    onSetReminder: () -> Unit,
+    onSelectFolder: () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.Transparent
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.1f)
+                        )
+                    )
+                )
+        ) {
+            LazyRow(
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    FahariXToolbarButton(
+                        icon = Icons.Outlined.PhotoLibrary,
+                        text = "Galerie",
+                        onClick = onImageFromGallery,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                item {
+                    FahariXToolbarButton(
+                        icon = Icons.Outlined.CameraAlt,
+                        text = "Photo",
+                        onClick = onImageFromCamera,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+                item {
+                    FahariXToolbarButton(
+                        icon = Icons.Outlined.Mic,
+                        text = "Audio",
+                        onClick = onRecordAudio,
+                        color = MaterialTheme.colorScheme.tertiary
+                    )
+                }
+                item {
+                    FahariXToolbarButton(
+                        icon = Icons.Outlined.NotificationAdd,
+                        text = "Rappel",
+                        onClick = onSetReminder,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                item {
+                    FahariXToolbarButton(
+                        icon = Icons.Outlined.Folder,
+                        text = "Dossier",
+                        onClick = onSelectFolder,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun FahariXToolbarButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    text: String,
+    onClick: () -> Unit,
+    color: Color
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    color = color.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(24.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = text,
+                tint = color,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = FontWeight.Medium
+            ),
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+        )
+    }
+}
+
+@Composable
+fun FahariXImageUrlDialog(
+    imageUrlInput: String,
+    onImageUrlChange: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Link,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        },
+        title = {
+            Text(
+                "Ajouter une image",
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = imageUrlInput,
+                onValueChange = onImageUrlChange,
+                label = { Text("URL de l'image") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary,
+                    cursorColor = MaterialTheme.colorScheme.primary
+                )
+            )
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Ajouter")
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("Annuler")
+            }
+        },
+        shape = RoundedCornerShape(20.dp)
+    )
+}
+
+@Composable
+fun FahariXFolderSelectionDialog(
     currentFolder: String,
     onFolderSelected: (String) -> Unit,
     onDismiss: () -> Unit
@@ -1032,12 +823,24 @@ fun FolderSelectionDialog(
     var newFolderName by remember { mutableStateOf("") }
     var isCreatingNewFolder by remember { mutableStateOf(false) }
 
-    // Liste de dossiers existants (à remplacer par une vraie liste de votre base de données)
     val existingFolders = listOf("Personnel", "Travail", "Projets", "Idées")
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Sélectionner un dossier") },
+        icon = {
+            Icon(
+                imageVector = Icons.Outlined.Folder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.secondary
+            )
+        },
+        title = {
+            Text(
+                "Sélectionner un dossier",
+                color = MaterialTheme.colorScheme.secondary,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column {
                 if (isCreatingNewFolder) {
@@ -1049,8 +852,9 @@ fun FolderSelectionDialog(
                             .fillMaxWidth()
                             .padding(bottom = 16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                            focusedLabelColor = MaterialTheme.colorScheme.secondary,
+                            cursorColor = MaterialTheme.colorScheme.secondary
                         )
                     )
                 } else {
@@ -1067,7 +871,7 @@ fun FolderSelectionDialog(
                             selected = currentFolder.isEmpty(),
                             onClick = { onFolderSelected("") },
                             colors = RadioButtonDefaults.colors(
-                                selectedColor = MaterialTheme.colorScheme.primary
+                                selectedColor = MaterialTheme.colorScheme.secondary
                             )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -1076,8 +880,7 @@ fun FolderSelectionDialog(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        thickness = 2.dp,
-
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
 
                     // Liste des dossiers existants
@@ -1094,14 +897,14 @@ fun FolderSelectionDialog(
                                 selected = currentFolder == folderName,
                                 onClick = { onFolderSelected(folderName) },
                                 colors = RadioButtonDefaults.colors(
-                                    selectedColor = MaterialTheme.colorScheme.primary
+                                    selectedColor = MaterialTheme.colorScheme.secondary
                                 )
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Icon(
-                                imageVector = Icons.Default.Folder,
+                                imageVector = Icons.Outlined.Folder,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = MaterialTheme.colorScheme.secondary,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -1111,7 +914,7 @@ fun FolderSelectionDialog(
 
                     HorizontalDivider(
                         modifier = Modifier.padding(vertical = 8.dp),
-                        thickness = 2.dp,
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                     )
 
                     // Option pour créer un nouveau dossier
@@ -1123,9 +926,10 @@ fun FolderSelectionDialog(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
+                        ),
+                        shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(Icons.Default.CreateNewFolder, contentDescription = null)
+                        Icon(Icons.Outlined.CreateNewFolder, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Créer un nouveau dossier")
                     }
@@ -1142,104 +946,34 @@ fun FolderSelectionDialog(
                     },
                     enabled = newFolderName.isNotEmpty(),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                        containerColor = MaterialTheme.colorScheme.secondary
                     )
                 ) {
                     Text("Créer")
                 }
             } else {
-                TextButton(onClick = onDismiss) {
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
                     Text("Fermer")
                 }
             }
         },
         dismissButton = {
             if (isCreatingNewFolder) {
-                TextButton(onClick = { isCreatingNewFolder = false }) {
+                TextButton(
+                    onClick = { isCreatingNewFolder = false },
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.secondary
+                    )
+                ) {
                     Text("Annuler")
                 }
             }
-        }
-    )
-}
-
-@Composable
-fun DatePickerDialog(
-    onDismiss: () -> Unit,
-    onDateSelected: (Date) -> Unit
-) {
-    val calendar = Calendar.getInstance()
-    var selectedYear by remember { mutableStateOf(calendar.get(Calendar.YEAR)) }
-    var selectedMonth by remember { mutableStateOf(calendar.get(Calendar.MONTH)) }
-    var selectedDay by remember { mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Sélectionner une date d'échéance") },
-        text = {
-            Column {
-                // Ici, vous pourriez implémenter un sélecteur de date personnalisé
-                // Pour simplifier, j'utilise des champs numériques
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Jour
-                    OutlinedTextField(
-                        value = selectedDay.toString(),
-                        onValueChange = {
-                            val day = it.toIntOrNull() ?: 1
-                            if (day in 1..31) selectedDay = day
-                        },
-                        label = { Text("Jour") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Mois
-                    OutlinedTextField(
-                        value = (selectedMonth + 1).toString(),
-                        onValueChange = {
-                            val month = it.toIntOrNull() ?: 1
-                            if (month in 1..12) selectedMonth = month - 1
-                        },
-                        label = { Text("Mois") },
-                        modifier = Modifier.weight(1f),
-                        singleLine = true
-                    )
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    // Année
-                    OutlinedTextField(
-                        value = selectedYear.toString(),
-                        onValueChange = {
-                            val year = it.toIntOrNull() ?: 2023
-                            if (year >= 2023) selectedYear = year
-                        },
-                        label = { Text("Année") },
-                        modifier = Modifier.weight(1.5f),
-                        singleLine = true
-                    )
-                }
-            }
         },
-        confirmButton = {
-            Button(
-                onClick = {
-                    calendar.set(selectedYear, selectedMonth, selectedDay)
-                    onDateSelected(calendar.time)
-                }
-            ) {
-                Text("Confirmer")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Annuler")
-            }
-        }
+        shape = RoundedCornerShape(20.dp)
     )
 }
