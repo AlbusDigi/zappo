@@ -59,7 +59,7 @@ class NoteRepository @Inject constructor(private val noteDao: NoteDao) {
         isTask: Boolean = false,
         isCompleted: Boolean = false,
         dueDate: Date? = null,
-        imageUris: List<String> = emptyList(),
+        imageUris: List<String>? = emptyList(),
         textFormatting: String? = null,
         reminderDateTime: Long? = null,
         reminderRecurrence: String? = null,

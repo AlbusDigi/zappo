@@ -19,7 +19,7 @@ import com.faharix.zappo.ui.screens.ContentType
 import com.faharix.zappo.ui.screens.EditNoteScreen
 import com.faharix.zappo.ui.screens.HomeScreen
 import com.faharix.zappo.ui.screens.TrashScreen
-import com.faharix.zappo.ui.theme.ZappoTheme
+import com.faharix.zappo.ui.theme.FahariXNotesTheme
 import com.faharix.zappo.viewmodel.NotesViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             val systemInDarkTheme = isSystemInDarkTheme()
             var darkTheme by remember { mutableStateOf(systemInDarkTheme) }
 
-            ZappoTheme(darkTheme = darkTheme) {
+            FahariXNotesTheme(darkTheme = darkTheme) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
                     val notesViewModel: NotesViewModel = hiltViewModel()
