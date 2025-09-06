@@ -10,11 +10,13 @@ plugins {
 android {"" +
         ""
     namespace = "com.faharix.zappo"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.faharix.zappo"
         minSdk = 24
+        //noinspection OldTargetApi
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -26,7 +28,7 @@ android {"" +
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -64,6 +66,8 @@ dependencies {
     implementation(libs.material3)
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
+    implementation("com.google.accompanist:accompanist-permissions:0.31.1-alpha")
+
 
     // Room
     implementation(libs.androidx.room.runtime)
